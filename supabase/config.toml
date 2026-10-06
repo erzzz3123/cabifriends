@@ -1,0 +1,5 @@
+# Supabase CLI config (only the parts this project needs).
+project_id = "cabifriends"
+[functions.dropbox-sync]
+# Called by Supabase Cron with its own secret (DROPBOX_SYNC_SECRET), not a user JWT.
+verify_jwt = false

@@ -1,0 +1,86 @@
+-- Dropbox → Supabase Storage image sync: storage bucket, bookkeeping tables, hourly schedule.
+-- Run in Supabase → SQL editor AFTER schema.sql. Safe to re-run.
+-- Before the schedule at the bottom will work, store two secrets in Vault (see README → "Dropbox image sync").
+
+-- ---------- bucket ----------
+-- Public: the website shows these images. Only the Edge Function (service role) can write.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types) values
+  ('producer_images', 'producer_images', true, 52428800, array['image/jpeg','image/png','image/webp','image/gif','image/avif'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- ---------- bookkeeping ----------
+-- One row per image file copied from Dropbox. `version` is Dropbox's content hash (or rev), so unchanged
+-- files are never downloaded again. Paths in storage include a short hash of the version, so a changed
+-- photo gets a new URL and no browser or CDN keeps showing the old one.
+create table if not exists dropbox_images (
+  id bigint generated always as identity primary key,
+  airtable_record_id text not null,
+  dropbox_file_id text not null,          -- stable across renames and moves
+  dropbox_path text not null,             -- path inside the producer's folder, used for ordering
+  version text not null,
+  storage_path text not null unique,
+  bytes int,
+  synced_at timestamptz not null default now(),
+  missing_since timestamptz,              -- set when the file disappears from Dropbox (hidden from the site, kept in storage)
+  unique (airtable_record_id, dropbox_file_id)
+);
+create index if not exists dropbox_images_record_idx on dropbox_images (airtable_record_id);
+
+-- One row per Airtable producer that has (or had) a folder. Producers synced least recently go first.
+create table if not exists dropbox_folders (
+  airtable_record_id text primary key,
+  producer_name text,
+  folder text,
+  last_synced_at timestamptz,
+  last_error text,
+  image_count int default 0
+);
+
+-- A log of every run, with counts and anything that needs a human (unmatched folders, skipped files, errors).
+create table if not exists dropbox_sync_runs (
+  id bigint generated always as identity primary key,
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  status text not null default 'running',  -- running | ok | partial | failed
+  dry_run boolean not null default false,
+  stats jsonb default '{}',
+  issues jsonb default '[]'
+);
+
+-- Server-only: RLS on with no policies, so neither the anon key nor signed-in users can read or write these.
+alter table dropbox_images enable row level security;
+alter table dropbox_folders enable row level security;
+alter table dropbox_sync_runs enable row level security;
+revoke all on dropbox_images, dropbox_folders, dropbox_sync_runs from anon, authenticated;
+
+-- ---------- schedule (Supabase Cron) ----------
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+-- Every hour at :05 → Dropbox sync (copies images, writes Image URLs to Airtable).
+select cron.unschedule('dropbox-image-sync') where exists (select 1 from cron.job where jobname = 'dropbox-image-sync');
+select cron.schedule('dropbox-image-sync', '5 * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/dropbox-sync',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'dropbox_sync_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 10000)
+$$);
+
+-- Every hour at :20 → website pulls Airtable (names, prefectures, Image URLs…) into its database.
+-- Needs the `site_url` and `cron_secret` Vault secrets (CRON_SECRET must match the Vercel env var).
+select cron.unschedule('airtable-site-sync') where exists (select 1 from cron.job where jobname = 'airtable-site-sync');
+select cron.schedule('airtable-site-sync', '20 * * * *', $$
+  select net.http_get(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'site_url') || '/api/sync-airtable',
+    headers := jsonb_build_object('Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')),
+    timeout_milliseconds := 10000)
+$$);
+
+-- Useful checks:
+--   select * from dropbox_sync_runs order by id desc limit 5;
+--   select jobname, schedule, active from cron.job;
+--   select * from cron.job_run_details order by start_time desc limit 10;
+--   select status_code, content from net._http_response order by id desc limit 5;
