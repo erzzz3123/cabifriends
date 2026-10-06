@@ -1,0 +1,20 @@
+{
+  "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/sync-airtable",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    }
+  ]
+}
