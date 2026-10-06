@@ -159,9 +159,9 @@ map coordinates are set in /admin because the Airtable table has no columns for 
 Airtable are unpublished, not deleted. Content edits reach the live site within ~15 minutes — no redeploy.
 
 ## Food pill images
-Hovering a food pill (map drawer "Known for", filters, profiles) shows a small photo by the cursor.
+Hovering a food (pills in the map drawer, filters and profiles; "Known for" and "In season" rows on prefecture pages) shows a small photo by the cursor.
 Images live in `assets/foods/` and are listed in `assets/foods/foods.js` (`"Matcha": "matcha.jpg"`, keyed by the English
-name used in `data.js`; Japanese labels are matched automatically). The current set is 129 public-domain / CC0
-placeholder photos from Wikimedia Commons — sources in `assets/foods/CREDITS.md`. 51 foods have no image yet and simply
-show nothing. To add or replace one: put a 240px JPEG (or a transparent PNG, shown uncropped) in `assets/foods/`
+name used in `data.js`; Japanese labels are matched automatically). The current set is 155 public-domain / CC0
+placeholder photos from Wikimedia Commons, each checked by eye — sources in `assets/foods/CREDITS.md`. Foods without an
+image simply show nothing. Rows/elements opt in with a `data-food="English name"` attribute. To add or replace one: put a 240px JPEG (or a transparent PNG, shown uncropped) in `assets/foods/`
 and add/update its line in `foods.js`.

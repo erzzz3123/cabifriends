@@ -738,7 +738,7 @@ function renderPanel(list,kp){
      <div class="plbl meta"><span>${T('Known for','名産')}</span></div>
      <div class="known-list">${p.specialties.map(s=>`<button class="tag" onclick="A.term('${esc(s)}')">${esc(s)}</button>`).join('')}</div>
      <div class="plbl meta"><span>${T('In season','旬')}</span></div>
-     <div class="season">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<span class="meta mute" style="padding-top:2px">${s}</span><span>${esc(p.seasonal_foods[i])}</span>`).join('')}</div>
+     <div class="season">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<span class="meta mute" style="padding-top:2px">${s}</span><span data-food="${esc(p._seas[i])}">${esc(p.seasonal_foods[i])}</span>`).join('')}</div>
      <div class="plbl meta"><span>${T('Cabi’s Friends in '+p.name_en,p.name_en+'のCabiの友人')}</span><span>${String(fr.length).padStart(2,'0')}</span></div>
      ${fr.length?fr.map(miniRow).join(''):`<p style="font-size:14px;margin:0 0 8px">${T('No Friends here yet. The map fills in as we meet people.','ここにはまだ友人がいません。出会いが増えるほど、地図は豊かになっていきます。')}</p><a class="ui" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a>`}
      <div class="plbl meta"><span>${T('Nearby','近隣')}</span></div>
@@ -829,9 +829,9 @@ function renderPref(slug){
   </section>
   <section class="pfgrid wrap">
     <div><div class="h3"><h3>${T('Known for','名産')}</h3><span class="meta mute">${T('Select to explore','選んで探す')}</span></div>
-      <div class="klist">${p.specialties.map((s,i)=>{const n=friendsWith(s),k=knownPrefs([s]).length-1;return `<button onclick="A.term('${esc(s)}')"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(s)}</span><i>${n?fc(n):''}${n&&k?' · ':''}${k>0?`+${k}${T(' pref.','都道府県')}`:''}</i></button>`;}).join('')}</div></div>
+      <div class="klist">${p.specialties.map((s,i)=>{const n=friendsWith(s);return `<button data-food="${esc(p._spec[i])}" onclick="A.term('${esc(s)}')"><span class="n">${String(i+1).padStart(2,'0')}</span><span>${esc(s)}</span><i>${n?fc(n):''}</i></button>`;}).join('')}</div></div>
     <div><div class="h3"><h3>${T('In season','旬')}</h3><span class="meta mute">旬</span></div>
-      <div class="seasons">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<div><span class="meta mute" style="padding-top:5px">${s}</span><span>${esc(p.seasonal_foods[i])}</span></div>`).join('')}</div></div>
+      <div class="seasons">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<div data-food="${esc(p._seas[i])}"><span class="meta mute" style="padding-top:5px">${s}</span><span>${esc(p.seasonal_foods[i])}</span></div>`).join('')}</div></div>
   </section>
   <section class="block wrap">
     <div class="h3"><h3>${T('Cabi’s Friends in '+p.name_en,p.name_en+'のCabiの友人')}</h3><span class="meta mute">${String(fr.length).padStart(2,'0')}</span></div>
@@ -992,14 +992,14 @@ const markLong=()=>{const blocks=new Map();document.querySelectorAll('#root p,#r
 new MutationObserver(markLong).observe(document.getElementById('root'),{childList:true,subtree:true});
 /* Food pills → small transparent image by the cursor (window.FOOD_IMG from /assets/foods/foods.js; works for JA labels too) */
 const foodEl=$('#food'),foodImg=foodEl.querySelector('img');let jaToEn=null;
-const foodSrc=el=>{const F=window.FOOD_IMG;if(!F)return null;const t=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+const foodSrc=el=>{const F=window.FOOD_IMG;if(!F)return null;const t=el.dataset.food||[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
   if(!jaToEn){jaToEn={};Object.entries(window.JA_TERMS||{}).forEach(([en,ja])=>jaToEn[ja]=en);}
   const f=F[t]||F[jaToEn[t]];return f?'/assets/foods/'+f:null;};
 const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-100),y=Math.max(e.clientY-104,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
 if(hoverable){
-  document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag');if(!el)return;const src=foodSrc(el);if(!src)return;
+  document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(!el)return;const src=foodSrc(el);if(!src)return;
     if(foodImg.getAttribute('src')!==src){foodImg.src=src;foodEl.classList.toggle('cut',/\.png$/i.test(src));}foodMove(e);foodEl.classList.add('on');});
-  document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
+  document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
   document.addEventListener('mousemove',e=>{if(foodEl.classList.contains('on'))foodMove(e);});
   addEventListener('hashchange',()=>foodEl.classList.remove('on'));
 }

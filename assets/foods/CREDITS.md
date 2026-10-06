@@ -134,3 +134,30 @@ derivative work: Kenraiz | Public domain |
 | Kokutō | kokuto.jpg | [Sucre_blanc_cassonade_complet_rapadura.jpg](https://commons.wikimedia.org/wiki/File:Sucre_blanc_cassonade_complet_rapadura.jpg) | Romain Behar | Public domain |
 | Mozuku | mozuku.jpg | [Mozuku 001.jpg](https://commons.wikimedia.org/wiki/File:Mozuku_001.jpg) | Ocdp | CC0 |
 | Shikuwasa | shikuwasa.jpg | [Shikwasa-1.jpg](https://commons.wikimedia.org/wiki/File:Shikwasa-1.jpg) | Sean-Jin at English Wikipedia | Public domain |
+| Asparagus | asparagus.jpg | [Illustration_Asparagus_officinalis0b.jpg](https://commons.wikimedia.org/wiki/File:Illustration_Asparagus_officinalis0b.jpg) | CSvBibra | Public domain |
+| Ōma tuna | oma-tuna.jpg | [Tuna_assortment.png](https://commons.wikimedia.org/wiki/File:Tuna_assortment.png) | NOAA | Public domain |
+| Matsutake | matsutake.jpg | [Tricholoma matsutake - National Museum of Nature and Science, Tokyo - DSC06852.JPG](https://commons.wikimedia.org/wiki/File:Tricholoma_matsutake_-_National_Museum_of_Nature_and_Science,_Tokyo_-_DSC06852.JPG) | Daderot | CC0 |
+| Bamboo shoots | bamboo-shoots.jpg | [Bamboo shoot.jpg](https://commons.wikimedia.org/wiki/File:Bamboo_shoot.jpg) | Tangopaso | Public domain |
+| Junsai | junsai.jpg | [Brasenia schreberi 100g bottle Tombo Jirushi Junsai.jpg](https://commons.wikimedia.org/wiki/File:Brasenia_schreberi_100g_bottle_Tombo_Jirushi_Junsai.jpg) | 投稿者 | Public domain |
+| Hatahata | hatahata.jpg | [Arctoscopus_japonicus_(FDA_197).jpg](https://commons.wikimedia.org/wiki/File:Arctoscopus_japonicus_(FDA_197).jpg) | The U.S. Food and Drug Administration | Public domain |
+| La France pears | la-france-pears.jpg | [Pears.jpg](https://commons.wikimedia.org/wiki/File:Pears.jpg) | Keith Weller | Public domain |
+| Hatsu-gatsuo | hatsu-gatsuo.jpg | [Katsuwonus_pelamis.png](https://commons.wikimedia.org/wiki/File:Katsuwonus_pelamis.png) | Unknown authorUnknown author | Public domain |
+| Unagi | unagi.jpg | [Unagi.JPG](https://commons.wikimedia.org/wiki/File:Unagi.JPG) | sasayumi | Public domain |
+| New rice | new-rice.jpg | [Short-grain_rice_(japonica).jpg](https://commons.wikimedia.org/wiki/File:Short-grain_rice_(japonica).jpg) | ch1310 | CC0 |
+| Snow-aged carrots | snow-aged-carrots.jpg | [Vegetable-Carrot-Bundle-wStalks.jpg](https://commons.wikimedia.org/wiki/File:Vegetable-Carrot-Bundle-wStalks.jpg) | Evan-Amos | Public domain |
+| Hotaru-ika | hotaru-ika.jpg | [Watasenia_scintillans.jpg](https://commons.wikimedia.org/wiki/File:Watasenia_scintillans.jpg) | ja:user:Dieno | Public domain |
+| Iwagaki oysters | iwagaki-oysters.jpg | [Crassostrea_nippona_-_Kyoto_University_Museum_-_DSC06411.JPG](https://commons.wikimedia.org/wiki/File:Crassostrea_nippona_-_Kyoto_University_Museum_-_DSC06411.JPG) | Daderot | CC0 |
+| Nozawana pickles | nozawana-pickles.jpg | [Nozawana 001.jpg](https://commons.wikimedia.org/wiki/File:Nozawana_001.jpg) | Ocdp | CC0 |
+| Shincha | shincha.jpg | [Green_tea_3_appearances.jpg](https://commons.wikimedia.org/wiki/File:Green_tea_3_appearances.jpg) | Alessandro Martini | CC0 |
+| Figs | figs.jpg | [Ficus_carica_L,_1771.jpg](https://commons.wikimedia.org/wiki/File:Ficus_carica_L,_1771.jpg) | Trew, C.J | Public domain |
+| Miso nikomi | miso-nikomi.jpg | [鶏天のうどん.jpg](https://commons.wikimedia.org/wiki/File:%E9%B6%8F%E5%A4%A9%E3%81%AE%E3%81%86%E3%81%A9%E3%82%93.jpg) | 加茂川の民 | CC0 |
+| Shōgoin turnip | shogoin-turnip.jpg | [Turnip (Red Turnip).JPG](https://commons.wikimedia.org/wiki/File:Turnip_(Red_Turnip).JPG) | Miansari66 | CC0 |
+| Shungiku | shungiku.jpg | [Chrysanthemum_coronarium_May_2008.jpg](https://commons.wikimedia.org/wiki/File:Chrysanthemum_coronarium_May_2008.jpg) | Laitche | Public domain |
+| Ikanago | ikanago.jpg | [Tobiasz.JPG](https://commons.wikimedia.org/wiki/File:Tobiasz.JPG) | TomiUSM | Public domain |
+| Octopus | octopus.jpg | [Octopus macropus Merculiano.jpg](https://commons.wikimedia.org/wiki/File:Octopus_macropus_Merculiano.jpg) | Comingio Merculiano in Jatta Giuseppe | Public domain |
+| Sawara | sawara.jpg | [Scomberomorus_niphonius_Naturalis_Biodiversity_Center_-_RMNH.ART.192_-_Scomberomorus_nichonius_(Cuvier)_-_Kawahara_Keiga_-_1823_-_1829_-_Siebold_Collection_-_pencil_drawing_-_water_colour.jpeg](https://commons.wikimedia.org/wiki/File:Scomberomorus_niphonius_Naturalis_Biodiversity_Center_-_RMNH.ART.192_-_Scomberomorus_nichonius_(Cuvier)_-_Kawahara_Keiga_-_1823_-_1829_-_Siebold_Collection_-_pencil_drawing_-_water_colour.jpeg) | (Cuvier) | Public domain |
+| White peaches | white-peaches.jpg | [Illustration_Prunus_persica_clean_no_descr.jpg](https://commons.wikimedia.org/wiki/File:Illustration_Prunus_persica_clean_no_descr.jpg) | File:Illustration Prunus persica0.jpg: PLEASE COMPLETE AUTHOR INFORMATION
+derivative work: Kenraiz | Public domain |
+| Katsuo | katsuo.jpg | [Katsuwonus_pelamis.png](https://commons.wikimedia.org/wiki/File:Katsuwonus_pelamis.png) | Unknown authorUnknown author | Public domain |
+| Buntan | buntan.jpg | [Cocktail pomelo en coupe.jpg](https://commons.wikimedia.org/wiki/File:Cocktail_pomelo_en_coupe.jpg) | Jpbrigand | CC0 |
+| Sakurajima daikon | sakurajima-daikon.jpg | [Buri Daikon.jpg](https://commons.wikimedia.org/wiki/File:Buri_Daikon.jpg) | DoWhile | Public domain |
