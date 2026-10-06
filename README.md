@@ -106,6 +106,10 @@ stored encrypted in Supabase Vault (`dropbox_refresh_token`) and is only used in
 - Photos are ordered by file name (`01.jpg`, `02.jpg`, …); the first is the cover. Subfolders inside a producer folder
   are included; anything starting with `_` (e.g. `_rejects`) is ignored. iPhone HEIC photos are converted.
 - Stored as 2048 px JPEGs at `producer_images/<Airtable record ID>/…`, so renaming a producer never re-uploads anything.
+- **Videos** (`.mp4`, `.m4v`, `.webm`, `.mov`) are copied exactly as they are — no compression — up to 50 MB each
+  (larger ones are skipped and listed in the run report; export a smaller MP4). They share the photo list and order:
+  name one `01-….mp4` to make it the cover. On the site they play muted and looping in the large views (directory
+  panel, profile) and show their first frame in thumbnails, cards and previews.
 
 ### What a sync does
 - **New or edited photos** are copied; unchanged ones (same Dropbox content hash) are skipped. An edited photo gets a

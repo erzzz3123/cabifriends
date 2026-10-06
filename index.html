@@ -130,7 +130,7 @@ button{font:inherit;color:inherit}
 .card{display:grid;align-content:start;gap:10px;cursor:pointer;transition:opacity .15s}
 .card.dim{opacity:.22}
 .card .thumb{container-type:size;position:relative;aspect-ratio:891/952;overflow:hidden;border-radius:5px;background:rgba(67,47,41,.09)}
-.card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s}
+.card .thumb img,.card .thumb video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s}
 .card .thumb .lbl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .card .thumb .kj{position:absolute;inset:34px 0 48px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:min(30px,calc((100cqh - 90px) / 6.4));line-height:1;letter-spacing:.04em;color:rgba(67,47,41,.55);writing-mode:vertical-rl;transition:opacity .2s}
 .card .thumb .no{position:absolute;left:8px;top:8px;background:var(--bone);padding:2px 7px;border-radius:40px;font-size:10px;letter-spacing:.06em;z-index:2}
@@ -176,7 +176,7 @@ button{font:inherit;color:inherit}
 .ent.stair .strip{transition:none}
 .th{transform-origin:50% 0}
 .th{height:100%;padding:0;border:0;background:none;cursor:pointer;display:block;flex:none}
-.th img{height:100%;width:auto;display:block}
+.th img,.th video{height:100%;width:auto;display:block}
 .th .ph2{display:block;height:100%}
 .dl.has-sel .ent:not(.sel){opacity:.28}
 .dl.has-sel .ent:not(.sel):hover{opacity:1}
@@ -188,7 +188,7 @@ button{font:inherit;color:inherit}
 .dp-h{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-size:13px;line-height:1.38;padding-bottom:4px}
 .dp-h .a{display:flex;gap:18px;flex:none}
 .dp-im{display:block}
-.dp-im>img{width:100%;height:auto;display:block;margin:0 auto}
+.dp-im>img,.dp-im>video{width:100%;height:auto;display:block;margin:0 auto}
 .dp-im>.dp-ph{width:100%;aspect-ratio:4/3;margin:0 auto}
 .dp-ph{background:rgba(67,47,41,.12);color:var(--ink);display:flex !important;flex-direction:column;justify-content:space-between;padding:12px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .fly{position:fixed;z-index:60;pointer-events:none;margin:0}
@@ -205,12 +205,12 @@ body.intro.i1 .util,body.intro.i1 .hd>:not(.logo){visibility:visible}
 .th,.card .thumb{background:transparent}
 /* hover photo */
 #peek{position:fixed;left:0;top:0;width:220px;pointer-events:none;z-index:40;display:none;background:var(--bone);border:1px solid var(--ink);padding:6px}
-#peek .ph,#peek img{width:100%;aspect-ratio:4/5;display:block;object-fit:cover}
+#peek .ph,#peek img,#peek video{width:100%;aspect-ratio:4/5;display:block;object-fit:cover}
 #peek .cap{padding:6px 2px 0;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .ph{background:rgba(67,47,41,.09);display:flex;flex-direction:column;justify-content:space-between;padding:10px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .ph .x{font-size:10px}
 .photo{position:relative;background:rgba(67,47,41,.09);overflow:hidden}
-.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo img,.photo video{width:100%;height:100%;object-fit:cover;display:block}
 figure{margin:0}
 figcaption{display:flex;justify-content:space-between;gap:12px;padding-top:8px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
 
@@ -259,7 +259,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 #tip .s{margin-top:6px}
 #tip{max-width:none;border-radius:8px}
 #tip .tth{display:flex;gap:6px;height:64px;margin-top:10px}
-#tip .tth img{height:100%;width:auto;display:block}
+#tip .tth img,#tip .tth video{height:100%;width:auto;display:block}
 #tip .tth span{height:100%;aspect-ratio:4/5;background:rgba(255,255,255,.18)}
 
 /* profile */
@@ -418,7 +418,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .ft{grid-template-columns:1fr}
 }
 /* Photos: 5px corners everywhere (thumbnails, panel, profile, previews, tooltips, the flying image) */
-.photo,.th img,.th .ph2,.dp-im>img,.dp-ph,.fly,#peek img,#peek .ph,#tip .tth img,#tip .tth span{border-radius:5px}
+.photo,.th img,.th video,.th .ph2,.dp-im>img,.dp-im>video,.dp-ph,.fly,#peek img,#peek video,#peek .ph,#tip .tth img,#tip .tth video,#tip .tth span{border-radius:5px}
 .fly{overflow:hidden}
 </style>
 </head>
@@ -459,6 +459,9 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 (function(){
 const $=s=>document.querySelector(s);
 const app=$('#root');
+const isVid=s=>/\.(mp4|m4v|webm|mov)(\?|#|$)/i.test(s||'');
+// Videos sit in the same slots as photos: large views loop silently like a moving photo, small ones show the first frame.
+const media=(src,alt='',play=false)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${src}" alt="${alt}">`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={}; PREFS.forEach((p,i)=>{p.id=i+1;P[p.slug]=p;p.friends=[];p._en=p.name_en;p._ja=p.name_ja;p._desc=p.description;p._spec=p.specialties;p._seas=p.seasonal_foods;});
 window.FRIENDS=FRIENDS.filter(f=>f&&f.slug&&P[f.prefecture]);FRIENDS.forEach(f=>{['images','tags','specialties','ingredients','methods'].forEach(k=>{if(!Array.isArray(f[k]))f[k]=[];});if(!Array.isArray(f.story))f.story=f.story?[f.story]:[];if(!Array.isArray(f.story_ja))f.story_ja=f.story_ja?[f.story_ja]:[];});
@@ -539,7 +542,7 @@ function miniMap(w,h,{hl=null,pts=[]}={}){
 
 /* ---------- shared bits ---------- */
 function photo(img,ratio,cls=''){
-  if(img&&img.src)return `<div class="photo ${cls}" style="${ratio?`aspect-ratio:${ratio}`:''}"><img src="${img.src}" alt="${esc(img.caption)}"></div>`;
+  if(img&&img.src)return `<div class="photo ${cls}" style="${ratio?`aspect-ratio:${ratio}`:''}">${media(img.src,esc(img.caption),true)}</div>`;
   return `<div class="photo ph ${cls}" style="${ratio?`aspect-ratio:${ratio}`:''}"><span class="x">${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(img?img.caption:'')}</span></div>`;
 }
 function miniRow(f){return `<div class="mini-row" onclick="A.friend('${f.slug}')"><div><div class="en">${esc(f.name_en)} <span class="mute" style="font-size:12px">${f.name_ja}</span></div><div class="d">${esc(f.makes)}</div></div><div class="meta mute">${P[f.prefecture].name_en}</div></div>`;}
@@ -608,10 +611,10 @@ const SORTS={no:'No. 1 →',shuffle:'Random',new:'Recently added',az:'A–Z',ns:
 const SORTS_JA={no:'番号順',shuffle:'ランダム',new:'新着順',az:'名前順',ns:'北から南へ'};
 const RAT=['4/5','3/2','1/1'],TONE=['rgba(67,47,41,.30)','rgba(67,47,41,.16)','rgba(67,47,41,.42)'];
 const desk=()=>matchMedia('(min-width:761px)').matches;
-function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?`<img src="${im.src}" alt="">`:`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
+function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
-  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?`<img src="${im.src}" alt="${esc(im.caption)}">`:`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
+  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
   <p class="dp-d">${esc(f.description)}</p>`;}
 function renderDirectory(list){
   mapBuilt=false;
@@ -633,7 +636,7 @@ function renderDirectory(list){
    </div>`;}).join('');
   const cards=list.map(f=>{const p=P[f.prefecture],im=f.images[0];return `
    <article class="card" data-slug="${f.slug}" onclick="A.friend('${f.slug}')">
-     <div class="thumb"><span class="no">${f.no}</span>${im.src?`<img src="${im.src}" alt="${esc(im.caption)}">`:`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
+     <div class="thumb"><span class="no">${f.no}</span>${im.src?media(im.src,esc(im.caption)):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
        <div class="hv"><span class="meta" style="opacity:.8">${p.name_ja} · ${coord(f.latitude,f.longitude)}</span><span>${esc(f.makes)}</span></div></div>
      <h2><span class="en">${esc(f.name_en)}</span><span class="ja">${f.name_ja}</span></h2>
      <ul class="ct"><li><button class="pf" onclick="event.stopPropagation();A.tag('place:${p.slug}')">${p.name_en}</button></li>${[f.category,...f.tags].map((t,i)=>`<li><button onclick="event.stopPropagation();A.tag('${i?'food:':'type:'}${esc(t)}')">${esc(tr(t))}</button></li>`).join('')}</ul>
@@ -661,7 +664,7 @@ function applyPreview(){
 /* hover photo */
 const peek=$('#peek');
 function peekShow(e,slug){if(!hoverable)return;const f=F[slug];const img=f.images[0];
-  peek.innerHTML=(img.src?`<img src="${img.src}" alt="">`:`<div class="ph"><span class="x">${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(img.caption)}</span></div>`)+`<div class="cap">${esc(img.caption)}</div>`;
+  peek.innerHTML=(img.src?media(img.src):`<div class="ph"><span class="x">${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(img.caption)}</span></div>`)+`<div class="cap">${esc(img.caption)}</div>`;
   peek.style.display='block';peekMove(e);}
 function peekMove(e){if(peek.style.display!=='block')return;const w=232,h=peek.offsetHeight||300;let x=e.clientX+24,y=e.clientY-h/2;if(x+w>innerWidth-10)x=e.clientX-w-24;y=Math.max(10,Math.min(innerHeight-h-10,y));peek.style.transform=`translate(${x}px,${y}px)`;}
 
@@ -707,7 +710,7 @@ function buildMap(){
     .style('opacity',0)
     .each(function(f){const el=this;setTimeout(()=>{el.style.opacity=1;},250+dOrder.indexOf(f.slug)*90);})
     .attr('transform',f=>{const [x,y]=projFor(pr,f.prefecture)([f.longitude,f.latitude]);return `translate(${x},${y})`;})
-    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?`<img src="${im.src}" alt="">`:`<span></span>`).join('')}</div>`))
+    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?media(im.src):`<span></span>`).join('')}</div>`))
     .on('mousemove',tipMove).on('mouseleave',tipHide)
     .on('click',(e,f)=>{tipHide();A.friend(f.slug);});
   dots.append('circle');
@@ -913,10 +916,10 @@ window.A={
       ths.forEach((t,k)=>{const d=(ths.length-1-k)*260;
         t.animate([{transform:'scale(1)',opacity:1},{transform:'scale(.6,0)',opacity:.4}],{duration:420,delay:d,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'});});
       setTimeout(()=>{ent.classList.remove('stair');ths.forEach(t=>{t.getAnimations().forEach(a=>a.cancel());t.style.visibility='';});},1100);}
-    const a=(el.querySelector('img,.ph2')||el).getBoundingClientRect(),b=tgt.getBoundingClientRect();
+    const a=(el.querySelector('img,video,.ph2')||el).getBoundingClientRect(),b=tgt.getBoundingClientRect();
     const cl=tgt.cloneNode(true);cl.classList.add('fly');document.body.appendChild(cl);tgt.style.visibility='hidden';
     const fr=r=>({left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
-    Object.assign(cl.style,fr(b),{aspectRatio:'auto',overflow:'hidden'});const ci=cl.querySelector('img');if(ci){ci.style.width='100%';ci.style.height='100%';ci.style.objectFit='cover';}
+    Object.assign(cl.style,fr(b),{aspectRatio:'auto',overflow:'hidden'});const ci=cl.querySelector('img,video');if(ci){ci.style.width='100%';ci.style.height='100%';ci.style.objectFit='cover';}
     const an=cl.animate([fr(a),fr(b)],{duration:620,easing:'cubic-bezier(.22,1,.36,1)'});
     an.onfinish=an.oncancel=()=>{tgt.style.visibility='';cl.remove();};
   },

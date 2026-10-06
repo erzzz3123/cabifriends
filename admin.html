@@ -55,7 +55,7 @@ dl{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;margin:0;font-size:
 .story{text-transform:none;white-space:pre-wrap;font-size:14px;max-width:70ch}
 .photos{display:flex;gap:9px;flex-wrap:wrap}
 .photos label{position:relative;display:block;cursor:pointer}
-.photos img{height:110px;display:block;border-radius:9px}
+.photos img,.photos video{height:110px;display:block;border-radius:5px}
 .photos input{position:absolute;top:6px;left:6px;accent-color:var(--ink)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
 .fld{display:grid;gap:5px;padding:12px 0;border-bottom:1px solid var(--soft)}
@@ -199,7 +199,7 @@ function friendPane(f){
       <button class="btn ghost" onclick="A.publish(${f.id},${!f.published})">${f.published?T('Unpublish','非公開にする'):T('Publish','公開する')}</button>
       ${f.published?`<a class="btn ghost" href="/#/friend/${esc(f.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a>`:''}</div>
     ${f.source==='airtable'?`<p class="meta mute">${T('Synced from Airtable — edits here are overwritten by the next sync.','Airtableから同期 — ここでの編集は次回の同期で上書きされます。')}</p>`:''}
-    <h2>${T('Photos','写真')} (${f.images.length})</h2><div class="photos">${f.images.map(u=>`<label><img src="${esc(u)}" alt=""></label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
+    <h2>${T('Photos','写真')} (${f.images.length})</h2><div class="photos">${f.images.map(u=>`<label>${/\.(mp4|m4v|webm|mov)(\?|$)/i.test(u)?`<video src="${esc(u)}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${esc(u)}" alt="">`}</label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
     <h2>${T('Listing','掲載内容')}</h2>${form(f)}
     <div class="acts"><button class="btn" onclick="A.save(${f.id})">${T('Save changes','変更を保存')}</button><span class="msg" id="msg" role="alert"></span></div>`;
 }

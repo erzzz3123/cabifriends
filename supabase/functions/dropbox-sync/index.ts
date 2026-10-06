@@ -42,10 +42,14 @@ const CFG = {
   imageMode: Deno.env.get('IMAGE_MODE') ?? 'web',                              // web = 2048px JPEG · original = as uploaded
   budgetMs: Number(Deno.env.get('TIME_BUDGET_MS') ?? 110_000),
 };
-const IMAGE = /\.(jpe?g|png|webp|gif|avif|heic|heif|tiff?|bmp)$/i;
+const IMAGE = /\.(jpe?g|png|webp|gif|avif|heic|heif|tiff?|bmp|mp4|m4v|webm|mov)$/i; // photos + videos
+const VIDEO = /\.(mp4|m4v|webm|mov)$/i;
 const WEB = /\.(jpe?g|png|webp|gif|avif)$/i;
-const MIME: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' };
+// .mov is served as video/mp4: iPhone/camera .mov files are MP4-family containers that browsers play under that type.
+const MIME: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif',
+  mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/mp4', webm: 'video/webm' };
 const MAX_ORIGINAL = 45 * 1024 * 1024;
+const MAX_VIDEO = 50 * 1024 * 1024; // Supabase Storage per-file limit on this plan
 
 // `base` = subfolder inside a shared link (producer folders under a shared parent folder).
 type Ref = { kind: 'link'; url: string; base?: string } | { kind: 'path'; path: string };
@@ -369,6 +373,16 @@ async function listSubfolders(root: Ref): Promise<{ name: string; ref: Ref }[]> 
 async function fetchImage(ref: Ref, f: DbxFile): Promise<{ bytes: Uint8Array; type: string; ext: string }> {
   const inLink = ref.kind === 'link' ? (ref.base ?? '') + f.rel : '';
   const resource = ref.kind === 'link' ? { '.tag': 'link', url: ref.url, path: inLink } : { '.tag': 'path', path: ref.path + f.rel };
+  const ext = f.name.split('.').pop()!.toLowerCase().replace('jpeg', 'jpg');
+  const original = async () => new Uint8Array(await (ref.kind === 'link'
+    ? await dbx('content', 'sharing/get_shared_link_file', { url: ref.url, path: inLink })
+    : await dbx('content', 'files/download', { path: ref.path + f.rel })).arrayBuffer());
+
+  // Videos are copied exactly as they are (no compression service) — keep them short and exported for the web.
+  if (VIDEO.test(f.name)) {
+    if (f.size > MAX_VIDEO) throw new Error(`${f.name}: video is ${Math.round(f.size / 1048576)} MB — export a smaller MP4 (under ${MAX_VIDEO / 1048576} MB)`);
+    return { bytes: await original(), type: MIME[ext], ext };
+  }
   if (CFG.imageMode === 'web' && f.size <= 20 * 1024 * 1024) {
     try {
       const r = await dbx('content', 'files/get_thumbnail_v2', { resource, format: { '.tag': 'jpeg' }, size: { '.tag': 'w2048h1536' }, mode: { '.tag': 'fitone_bestfit' } });
@@ -377,11 +391,7 @@ async function fetchImage(ref: Ref, f: DbxFile): Promise<{ bytes: Uint8Array; ty
   }
   if (!WEB.test(f.name)) throw new Error(`${f.name}: format browsers can't show and Dropbox couldn't convert`);
   if (f.size > MAX_ORIGINAL) throw new Error(`${f.name}: larger than ${MAX_ORIGINAL / 1048576} MB`);
-  const r = ref.kind === 'link'
-    ? await dbx('content', 'sharing/get_shared_link_file', { url: ref.url, path: inLink })
-    : await dbx('content', 'files/download', { path: ref.path + f.rel });
-  const ext = f.name.split('.').pop()!.toLowerCase().replace('jpeg', 'jpg');
-  return { bytes: new Uint8Array(await r.arrayBuffer()), type: MIME[ext], ext };
+  return { bytes: await original(), type: MIME[ext], ext };
 }
 
 // ---------------------------------------------------------------- Airtable API

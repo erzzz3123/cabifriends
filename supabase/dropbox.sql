@@ -3,9 +3,9 @@
 -- Before the schedule at the bottom will work, store two secrets in Vault (see the schedule section).
 
 -- ---------- bucket ----------
--- Public: the website shows these images. Only the Edge Function (service role) can write.
+-- Public: the website shows these photos and videos (≤ 50 MB each). Only the Edge Function (service role) can write.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types) values
-  ('producer_images', 'producer_images', true, 52428800, array['image/jpeg','image/png','image/webp','image/gif','image/avif'])
+  ('producer_images', 'producer_images', true, 52428800, array['image/jpeg','image/png','image/webp','image/gif','image/avif','video/mp4','video/webm'])
 on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 -- ---------- bookkeeping ----------
