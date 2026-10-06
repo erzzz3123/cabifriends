@@ -3,14 +3,14 @@
 Read `HANDOFF.md` first (design spec), then `README.md` (infra setup).
 
 ## What this is
-Editorial directory of people, producers and food culture across Japan. Static site + Vercel serverless API + Supabase. **Airtable is the source of truth** for producer info (synced hourly into Supabase by `api/sync-airtable.js`). Photos live in Dropbox folders; the `dropbox-sync` Edge Function copies them to Storage `producer_images` and writes URLs to Airtable "Image URLs". Public submissions are reviewed at `/admin`.
+Editorial directory of people, producers and food culture across Japan. Static site + Vercel serverless API + Supabase. **Airtable is the source of truth** for producer info (synced into Supabase every 15 min by the `airtable-sync` Edge Function). Photos live in a Dropbox **App folder** app (one folder only); the `dropbox-sync` Edge Function copies them to Storage `producer_images` and writes URLs to Airtable "Image URLs". Public submissions are reviewed at `/admin`.
 
 ## Layout
 - `index.html` — the whole front end (vanilla JS, hash router, inline CSS). Views: Directory (list/grid), Map, Friend profile, About, Submit a Producer.
 - `data.js` — bundled fallback data (`window.FRIENDS`, `window.PREFS`, `REGIONS`, `FAMILIES`). Live data comes from `/api/data`, same shape.
 - `i18n.js` — Japanese strings (`JA_TERMS`, `JA_DESC`). UI copy uses inline `T(en, ja)`.
 - `admin.html` — staff review/approval screen (`/admin`, Supabase magic-link sign-in).
-- `api/data.js` (public, anon key + RLS) · `api/submit.js` · `api/admin.js` · `api/config.js` · `api/sync-airtable.js` — Vercel functions. `lib/supabase.js` — `sbPublic()` / `sbAdmin()` clients + `adminFrom(req)`.
+- `api/data.js` (public, anon key + RLS) · `api/submit.js` · `api/admin.js` · `api/config.js` — Vercel functions. `lib/supabase.js` — `sbPublic()` / `sbAdmin()` clients + `adminFrom(req)`.
 - `supabase/schema.sql`, `supabase/seed.sql` — DB. `supabase/dropbox.sql` — image-sync tables + Supabase Cron jobs.
 - `supabase/functions/dropbox-sync/index.ts` — Deno Edge Function. Airtable is addressed by **field IDs** (table `tblG7x02MvbxqYPwF`); never request the Email/Contact status fields.
 - `assets/` — logos, d3, topojson, `japan-topo.js` (47 prefectures), Friend photos. `fonts/`, `_ds/` — Ginto Light + design tokens.

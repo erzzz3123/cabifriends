@@ -1,8 +1,8 @@
 // Dropbox → Supabase Storage (`producer_images`) → Airtable "Image URLs".
 //
 // Runs hourly from Supabase Cron (see supabase/dropbox.sql). For every producer in Airtable it finds the Dropbox
-// folder — the record's "Image Dropbox folder" link, or else a subfolder of DROPBOX_ROOT_PATH whose name matches
-// the producer — copies new or changed images into `producer_images/<airtable record id>/`, and writes the public
+// folder — a subfolder of the shared folder DROPBOX_ROOT_LINK whose name matches the producer (then nothing else in
+// Dropbox is read), or else the record's "Image Dropbox folder" link / a subfolder of DROPBOX_ROOT_PATH — copies new or changed images into `producer_images/<airtable record id>/`, and writes the public
 // URLs back to the record. Airtable stays the source of truth; this function only ever writes the Image URLs field.
 //
 // Safety:
@@ -14,9 +14,10 @@
 //   • Runs never overlap, and each run stops starting new downloads before the Edge Function time limit;
 //     the next run carries on where it left off.
 //
-// Auth: `Authorization: Bearer <DROPBOX_SYNC_SECRET>`. Body (all optional):
+// Auth: `Authorization: Bearer <SYNC_SECRET>`. Body (all optional):
 //   { "dry_run": true }        → list folders and report what would change; writes nothing
 //   { "record": "recXXXX" }    → sync just one producer
+//   { "disconnect": true }     → revoke and delete the stored Dropbox connection
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -34,7 +35,9 @@ const CFG = {
   folderField: Deno.env.get('AIRTABLE_FOLDER_FIELD') ?? 'fldSuLlPVdhXCnixB',  // Image Dropbox folder
   featureField: Deno.env.get('AIRTABLE_FEATURE_FIELD') ?? 'fldkJODLUgUUmhFnT', // Feature #
   urlsField: Deno.env.get('AIRTABLE_IMAGE_URLS_FIELD') ?? 'fldkPzHHAzwcXGHdu', // Image URLs
-  rootPath: (Deno.env.get('DROPBOX_ROOT_PATH') ?? '').replace(/\/+$/, ''),     // e.g. "/Cabi & Friends/Producers"
+  // Parent folder holding one subfolder per producer. "/" = the app's own folder (Dropbox "App folder" apps).
+  rootPath: Deno.env.get('DROPBOX_ROOT_PATH') === undefined ? null : Deno.env.get('DROPBOX_ROOT_PATH')!.replace(/\/+$/, ''),
+  rootLink: Deno.env.get('DROPBOX_ROOT_LINK') ?? '',                           // or a share link to that parent folder
   deleteAfterDays: Number(Deno.env.get('DELETE_AFTER_DAYS') ?? 7),
   imageMode: Deno.env.get('IMAGE_MODE') ?? 'web',                              // web = 2048px JPEG · original = as uploaded
   budgetMs: Number(Deno.env.get('TIME_BUDGET_MS') ?? 110_000),
@@ -44,7 +47,9 @@ const WEB = /\.(jpe?g|png|webp|gif|avif)$/i;
 const MIME: Record<string, string> = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' };
 const MAX_ORIGINAL = 45 * 1024 * 1024;
 
-type Ref = { kind: 'link'; url: string } | { kind: 'path'; path: string };
+// `base` = subfolder inside a shared link (producer folders under a shared parent folder).
+type Ref = { kind: 'link'; url: string; base?: string } | { kind: 'path'; path: string };
+const label = (r: Ref) => (r.kind === 'link' ? r.url + (r.base ?? '') : r.path);
 type DbxFile = { id: string; rel: string; name: string; version: string; size: number };
 type Row = { id: number; airtable_record_id: string; dropbox_file_id: string; dropbox_path: string; version: string; storage_path: string; missing_since: string | null };
 type Producer = { id: string; name: string; feature: string; folderUrl: string; urls: string };
@@ -57,6 +62,22 @@ Deno.serve(async (req) => {
   if (!authorized(req)) return new Response('Unauthorized', { status: 401 });
   const body = await req.json().catch(() => ({}));
   const sb = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } });
+
+  // { "disconnect": true } → revoke the stored Dropbox token at Dropbox (kills its refresh token too) and delete it.
+  if (body.disconnect) {
+    const { data: stored } = await sb.rpc('private_get_secret', { p_name: 'dropbox_refresh_token' });
+    let revoked = false;
+    if (stored) {
+      refreshToken = stored as string;
+      try {
+        await dropboxLogin();
+        revoked = (await fetch('https://api.dropboxapi.com/2/auth/token/revoke', { method: 'POST', headers: { Authorization: `Bearer ${dbxToken}` } })).ok;
+      } catch (e) { console.error('revoke', e); }
+      const { error } = await sb.rpc('private_delete_secret', { p_name: 'dropbox_refresh_token' });
+      if (error) return json({ error: error.message }, 500);
+    }
+    return json({ disconnected: !!stored, revoked_at_dropbox: revoked });
+  }
 
   // Never run two syncs at once (a run older than 15 minutes is assumed dead).
   const { data: running } = await sb.from('dropbox_sync_runs').select('id').is('finished_at', null)
@@ -74,7 +95,7 @@ Deno.serve(async (req) => {
 });
 
 function authorized(req: Request): boolean {
-  const want = `Bearer ${env('DROPBOX_SYNC_SECRET')}`;
+  const want = `Bearer ${env('SYNC_SECRET')}`;
   const got = req.headers.get('authorization') ?? '';
   if (got.length !== want.length) return false;
   let diff = 0;
@@ -92,6 +113,13 @@ async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; 
   const issues: Issue[] = [];
   let status = 'ok';
   try {
+    // Refresh token: stored in Vault by the dropbox-connect flow (or set manually as a DROPBOX_REFRESH_TOKEN secret).
+    refreshToken = Deno.env.get('DROPBOX_REFRESH_TOKEN') ?? '';
+    if (!refreshToken) {
+      const { data, error } = await sb.rpc('private_get_secret', { p_name: 'dropbox_refresh_token' });
+      if (error || !data) throw new Error('Dropbox is not connected yet — open a dropbox-connect link (scripts/dropbox-connect-link.sh).');
+      refreshToken = data as string;
+    }
     await dropboxLogin();
     let producers = (await airtableProducers()).filter((p) => !opts.only || p.id === opts.only);
     stats.producers = producers.length;
@@ -107,7 +135,7 @@ async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; 
     for (const p of producers) {
       if (timeUp()) { stats.deferred++; status = 'partial'; continue; }
       const ref = refs.get(p.id)!;
-      const folder = ref.kind === 'link' ? ref.url : ref.path;
+      const folder = label(ref);
       try {
         const urls = await syncProducer(sb, p, ref, { ...opts, timeUp, stats, issues });
         if (urls === 'kept') { status = 'partial'; continue; }
@@ -124,7 +152,12 @@ async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; 
       }
     }
     stats.airtable_updates = airtableUpdates.length;
-    if (!opts.dryRun) await airtableUpdate(airtableUpdates);
+    if (!opts.dryRun && airtableUpdates.length) {
+      await airtableUpdate(airtableUpdates);
+      // Put the new photos on the website now rather than at the next scheduled Airtable sync.
+      const r = await fetch(`${env('SUPABASE_URL')}/functions/v1/airtable-sync`, { method: 'POST', headers: { Authorization: `Bearer ${env('SYNC_SECRET')}` } });
+      if (!r.ok) issues.push({ problem: `airtable-sync after image update failed: ${r.status} ${(await r.text()).slice(0, 200)}` });
+    }
   } catch (e) {
     status = 'failed';
     issues.push({ problem: msg(e) });
@@ -215,25 +248,28 @@ async function syncProducer(sb: SupabaseClient, p: Producer, ref: Ref, o: {
 
 async function matchFolders(producers: Producer[], issues: Issue[]): Promise<Map<string, Ref>> {
   const refs = new Map<string, Ref>();
-  for (const p of producers) {
+  // With a parent folder configured, it is the ONLY place read: Airtable folder links are ignored.
+  for (const p of CFG.rootLink || CFG.rootPath !== null ? [] : producers) {
     const ref = parseFolderUrl(p.folderUrl);
     if (ref) refs.set(p.id, ref);
     else if (p.folderUrl) issues.push({ record: p.id, producer: p.name, folder: p.folderUrl, problem: 'not a Dropbox folder link' });
   }
-  if (!CFG.rootPath) return refs;
+  const root: Ref | null = CFG.rootLink ? parseFolderUrl(CFG.rootLink) : CFG.rootPath !== null ? { kind: 'path', path: CFG.rootPath } : null;
+  if (!root) return refs;
 
-  // Fallback: one subfolder per producer under DROPBOX_ROOT_PATH, matched by name, Japanese name, Feature # or record ID.
+  // Fallback: one subfolder per producer under the parent folder (DROPBOX_ROOT_LINK or DROPBOX_ROOT_PATH),
+  // matched by name, Japanese name, Feature # or record ID.
   const keys = new Map<string, string[]>();
   for (const p of producers) {
-    if (refs.has(p.id)) continue;
     for (const k of nameKeys(p)) keys.set(k, [...(keys.get(k) ?? []), p.id]);
   }
-  const claimed = new Set([...refs.values()].map((r) => (r.kind === 'path' ? r.path.toLowerCase() : '')));
-  for (const sub of await listSubfolders(CFG.rootPath)) {
-    if (claimed.has(sub.path.toLowerCase())) continue;
+  const claimed = new Set([...refs.values()].map((r) => label(r).toLowerCase()));
+  for (const sub of await listSubfolders(root)) {
+    if (claimed.has(label(sub.ref).toLowerCase())) continue;
     const ids = [...new Set([...(sub.name.match(/rec[A-Za-z0-9]{14}/g) ?? []), ...(keys.get(norm(sub.name)) ?? [])])];
-    if (ids.length === 1 && !refs.has(ids[0])) refs.set(ids[0], { kind: 'path', path: sub.path });
-    else issues.push({ folder: sub.path, problem:
+    if (ids.length === 1 && !refs.has(ids[0])) refs.set(ids[0], sub.ref);
+    else if (ids.length === 1 && parseFolderUrl(producers.find((p) => p.id === ids[0])?.folderUrl ?? '')) continue; // its Airtable link wins
+    else issues.push({ folder: sub.name, problem:
       ids.length > 1 ? `matches several producers (${ids.join(', ')}) — rename the folder or add its link in Airtable`
       : ids.length ? `${ids[0]} already has a folder — only one folder per producer is synced; merge them or move this one under "_"`
       : 'no matching producer in Airtable — rename the folder or add its link in Airtable' });
@@ -265,14 +301,14 @@ const norm = (s: string) => s.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p
 
 // ---------------------------------------------------------------- Dropbox API
 
-let dbxToken = '';
+let dbxToken = '', refreshToken = '';
 async function dropboxLogin() {
   const r = await fetch('https://api.dropboxapi.com/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: 'Basic ' + btoa(`${env('DROPBOX_APP_KEY')}:${env('DROPBOX_APP_SECRET')}`) },
-    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: env('DROPBOX_REFRESH_TOKEN') }),
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
   });
-  if (!r.ok) throw new Error(`Dropbox sign-in failed (${r.status}). The refresh token may have been revoked — redo the authorisation step. ${await r.text()}`);
+  if (!r.ok) throw new Error(`Dropbox sign-in failed (${r.status}). The refresh token may have been revoked — open a new dropbox-connect link. ${await r.text()}`);
   dbxToken = (await r.json()).access_token;
 }
 
@@ -298,7 +334,7 @@ async function dbx(kind: 'rpc' | 'content', endpoint: string, args: unknown): Pr
 // Lists image files in a producer folder (and its subfolders, 3 levels deep). Names starting with "_" or "."
 // are ignored, so a "_unused" subfolder is a handy place for photos that shouldn't go on the site.
 async function listImages(ref: Ref, rel = '', depth = 0): Promise<DbxFile[]> {
-  const args = ref.kind === 'link' ? { path: rel, shared_link: { url: ref.url } } : { path: ref.path + rel };
+  const args = ref.kind === 'link' ? { path: (ref.base ?? '') + rel, shared_link: { url: ref.url } } : { path: ref.path + rel };
   let page = await (await dbx('rpc', 'files/list_folder', { ...args, limit: 2000 })).json();
   const entries = [...page.entries];
   while (page.has_more) {
@@ -317,17 +353,22 @@ async function listImages(ref: Ref, rel = '', depth = 0): Promise<DbxFile[]> {
   return out;
 }
 
-async function listSubfolders(path: string): Promise<{ name: string; path: string }[]> {
-  let page = await (await dbx('rpc', 'files/list_folder', { path, limit: 2000 })).json();
+async function listSubfolders(root: Ref): Promise<{ name: string; ref: Ref }[]> {
+  const args = root.kind === 'link' ? { path: root.base ?? '', shared_link: { url: root.url } } : { path: root.path };
+  let page = await (await dbx('rpc', 'files/list_folder', { ...args, limit: 2000 })).json();
   const entries = [...page.entries];
   while (page.has_more) { page = await (await dbx('rpc', 'files/list_folder/continue', { cursor: page.cursor })).json(); entries.push(...page.entries); }
   return entries.filter((e: { '.tag': string; name: string }) => e['.tag'] === 'folder' && !/^[_.]/.test(e.name))
-    .map((e: { name: string; path_display: string }) => ({ name: e.name, path: e.path_display }));
+    .map((e: { name: string; path_display?: string }) => ({
+      name: e.name,
+      ref: root.kind === 'link' ? { kind: 'link', url: root.url, base: `${root.base ?? ''}/${e.name}` } : { kind: 'path', path: e.path_display ?? `${root.path}/${e.name}` },
+    }));
 }
 
 // web mode: Dropbox renders a 2048px JPEG (fast pages, and it converts iPhone HEIC photos). Falls back to the original.
 async function fetchImage(ref: Ref, f: DbxFile): Promise<{ bytes: Uint8Array; type: string; ext: string }> {
-  const resource = ref.kind === 'link' ? { '.tag': 'link', url: ref.url, path: f.rel } : { '.tag': 'path', path: ref.path + f.rel };
+  const inLink = ref.kind === 'link' ? (ref.base ?? '') + f.rel : '';
+  const resource = ref.kind === 'link' ? { '.tag': 'link', url: ref.url, path: inLink } : { '.tag': 'path', path: ref.path + f.rel };
   if (CFG.imageMode === 'web' && f.size <= 20 * 1024 * 1024) {
     try {
       const r = await dbx('content', 'files/get_thumbnail_v2', { resource, format: { '.tag': 'jpeg' }, size: { '.tag': 'w2048h1536' }, mode: { '.tag': 'fitone_bestfit' } });
@@ -337,7 +378,7 @@ async function fetchImage(ref: Ref, f: DbxFile): Promise<{ bytes: Uint8Array; ty
   if (!WEB.test(f.name)) throw new Error(`${f.name}: format browsers can't show and Dropbox couldn't convert`);
   if (f.size > MAX_ORIGINAL) throw new Error(`${f.name}: larger than ${MAX_ORIGINAL / 1048576} MB`);
   const r = ref.kind === 'link'
-    ? await dbx('content', 'sharing/get_shared_link_file', { url: ref.url, path: f.rel })
+    ? await dbx('content', 'sharing/get_shared_link_file', { url: ref.url, path: inLink })
     : await dbx('content', 'files/download', { path: ref.path + f.rel });
   const ext = f.name.split('.').pop()!.toLowerCase().replace('jpeg', 'jpg');
   return { bytes: new Uint8Array(await r.arrayBuffer()), type: MIME[ext], ext };

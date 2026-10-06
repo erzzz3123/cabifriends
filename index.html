@@ -14,8 +14,9 @@
 <script src="/assets/d3.min.js"></script>
 <script src="/assets/topojson-client.min.js"></script>
 <script>window.CF_API='/api';</script>
+<!-- Bundled data first (REGIONS, FAMILIES + fallback Friends); live /api/data then replaces FRIENDS and PREFS. -->
+<script src="/data.js"></script>
 <script src="/api/data"></script>
-<script>if(!window.FRIENDS||!window.FRIENDS.length)document.write('<script src="/data.js"><\/script>');</script>
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
 <style>
@@ -128,7 +129,7 @@ button{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:36px 16px;padding-top:24px;padding-bottom:12px;border-top:1px solid var(--ink)}
 .card{display:grid;align-content:start;gap:10px;cursor:pointer;transition:opacity .15s}
 .card.dim{opacity:.22}
-.card .thumb{container-type:size;position:relative;aspect-ratio:891/952;overflow:hidden;border-radius:10px;background:rgba(67,47,41,.09)}
+.card .thumb{container-type:size;position:relative;aspect-ratio:891/952;overflow:hidden;border-radius:5px;background:rgba(67,47,41,.09)}
 .card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .2s}
 .card .thumb .lbl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:10px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .card .thumb .kj{position:absolute;inset:34px 0 48px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:min(30px,calc((100cqh - 90px) / 6.4));line-height:1;letter-spacing:.04em;color:rgba(67,47,41,.55);writing-mode:vertical-rl;transition:opacity .2s}
@@ -188,9 +189,7 @@ button{font:inherit;color:inherit}
 .dp-h .a{display:flex;gap:18px;flex:none}
 .dp-im{display:block}
 .dp-im>img{width:100%;height:auto;display:block;margin:0 auto}
-.dp-f:nth-child(3n) .dp-im>img{width:72%}
-.dp-f:nth-child(3n+1):not(:nth-child(2)) .dp-im>img{width:86%}
-.dp-im>.dp-ph{width:60%;aspect-ratio:4/3;margin:0 auto}
+.dp-im>.dp-ph{width:100%;aspect-ratio:4/3;margin:0 auto}
 .dp-ph{background:rgba(67,47,41,.12);color:var(--ink);display:flex !important;flex-direction:column;justify-content:space-between;padding:12px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .fly{position:fixed;z-index:60;pointer-events:none;margin:0}
 .dp figcaption{padding-top:6px;text-align:center}
@@ -304,7 +303,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 .kv dd{margin:0}
 .kv dd .lnk{font-size:inherit}
 .fp-figs{display:grid;gap:30px}
-.fp-figs figure .photo{border-radius:10px}
+.fp-figs figure .photo{border-radius:5px}
 .fp-figs .duo{display:grid;grid-template-columns:1fr 1fr;gap:30px}
 .fp-figs figcaption{justify-content:flex-start;gap:10px}
 /* prefecture page */
@@ -418,6 +417,9 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .note{position:static}
  .ft{grid-template-columns:1fr}
 }
+/* Photos: 5px corners everywhere (thumbnails, panel, profile, previews, tooltips, the flying image) */
+.photo,.th img,.th .ph2,.dp-im>img,.dp-ph,.fly,#peek img,#peek .ph,#tip .tth img,#tip .tth span{border-radius:5px}
+.fly{overflow:hidden}
 </style>
 </head>
 <body data-theme="friends">
@@ -609,7 +611,7 @@ const desk=()=>matchMedia('(min-width:761px)').matches;
 function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?`<img src="${im.src}" alt="">`:`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
-  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?`<img src="${im.src}" alt="${esc(im.caption)}">`:`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div><figcaption><span>fig. ${f.images.indexOf(im)+1}</span><span>${esc(im.caption)}</span></figcaption></figure>`).join('')}
+  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?`<img src="${im.src}" alt="${esc(im.caption)}">`:`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
   <p class="dp-d">${esc(f.description)}</p>`;}
 function renderDirectory(list){
   mapBuilt=false;
@@ -780,7 +782,7 @@ function renderFriend(slug){
       <div class="fp-sec"><h2>${T('Location','所在地')}</h2><a href="#/map/${p.slug}" class="locator" style="display:block;border-radius:10px;overflow:hidden;max-width:300px">${miniMap(300,260,{hl:p.slug,pts:[f]})}</a><dl class="kv" style="margin-top:10px"><dt>${T('Coordinates:','座標：')}</dt><dd>${coord(f.latitude,f.longitude)}</dd></dl></div>
     </aside>
     <div class="fp-figs">
-      ${(()=>{const im=f.images,fig=(x,n,r)=>`<figure>${photo(x,r)}<figcaption><span>fig. ${n}</span><span>${esc(x.caption)}</span></figcaption></figure>`;
+      ${(()=>{const im=f.images,fig=(x,n,r)=>`<figure>${photo(x,r)}</figure>`;
         return fig(im[0],1,'3/2')+(im.length>2?`<div class="duo">${fig(im[1],2,'4/5')}${fig(im[2],3,'4/5')}</div>`:im[1]?fig(im[1],2,'3/2'):'')+im.slice(3).map((x,k)=>fig(x,k+4,'3/2')).join('');})()}
     </div>
   </section>

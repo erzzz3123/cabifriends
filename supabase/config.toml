@@ -1,5 +1,13 @@
 # Supabase CLI config (only the parts this project needs).
 project_id = "cabifriends"
 [functions.dropbox-sync]
-# Called by Supabase Cron with its own secret (DROPBOX_SYNC_SECRET), not a user JWT.
+# Called by Supabase Cron with its own secret (SYNC_SECRET), not a user JWT.
+verify_jwt = false
+
+[functions.airtable-sync]
+# Called by Supabase Cron / dropbox-sync with SYNC_SECRET, or by /admin with a signed-in admin's token (checked in code).
+verify_jwt = false
+
+[functions.dropbox-connect]
+# Opened in a browser via a signed, expiring link (and Dropbox's redirect back) — no JWT involved.
 verify_jwt = false

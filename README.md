@@ -12,8 +12,8 @@ Directory of the people, producers and places Cabi works with across Japan. Inte
   staff sign-in and the hourly scheduler (Supabase Cron).
 
 ```
-Dropbox folders ──(:05 hourly, Edge Function dropbox-sync)──▶ Storage `producer_images` ──URLs──▶ Airtable "Image URLs"
-Airtable ──(:20 hourly, /api/sync-airtable)──▶ Supabase `friends` + `friend_images`
+Dropbox app folder ──(:05 hourly, Edge Function dropbox-sync)──▶ Storage `producer_images` ──URLs──▶ Airtable "Image URLs"
+Airtable ──(every 15 min, Edge Function airtable-sync)──▶ Supabase `friends` + `friend_images`
 visitor ──▶ index.html ──▶ /api/data ──(anon key, RLS: published only)──▶ Supabase
 visitor ──▶ Submit form ──▶ /api/submit ──(service key)──▶ submissions table
                      └──── photos PUT straight to the private `submissions` bucket (signed URLs)
@@ -30,10 +30,12 @@ The page loads live data from `/api/data`. If that fails it falls back to the bu
 | `api/submit.js` | Submit a Producer: validation, rate limit, signed photo uploads |
 | `api/admin.js` | Approve / decline submissions, edit and publish producers |
 | `api/config.js` | Public Supabase URL + anon key for the admin sign-in |
-| `api/sync-airtable.js` | Hourly import Airtable → site database (names, prefectures, Image URLs…) |
-| `supabase/functions/dropbox-sync/` | Edge Function: Dropbox folders → Storage `producer_images` → Airtable Image URLs |
+| `supabase/functions/dropbox-sync/` | Edge Function: Dropbox app folder → Storage `producer_images` → Airtable Image URLs |
+| `supabase/functions/airtable-sync/` | Edge Function: Airtable → site database (every 15 min, and from /admin) |
+| `supabase/functions/dropbox-connect/` | Edge Function: one-click Dropbox authorisation (token goes straight to Vault) |
 | `supabase/dropbox.sql` | Bucket, sync bookkeeping tables, both hourly Cron jobs |
-| `scripts/dropbox-auth.sh` | One-time Dropbox authorisation (gets the refresh token) |
+| `scripts/dropbox-connect-link.sh` | Prints a 30-minute Dropbox connect link |
+| `scripts/set-secret.sh` | Sets one Edge Function secret with hidden input |
 | `supabase/schema.sql` | Tables, constraints, row-level security, storage buckets (re-runnable) |
 | `supabase/seed.sql` | 47 prefectures + the current 27 producers and their bundled photos |
 
@@ -92,107 +94,62 @@ deletions for existing producers are done in Supabase → Storage (`friends` buc
 
 ## Dropbox image sync
 
-### How producers and folders are matched
-1. **Preferred:** paste the folder's Dropbox share link into the producer's **Image Dropbox folder** field in Airtable
-   (Dropbox → folder → Share → Copy link). Links to folders in your own Dropbox (`dropbox.com/home/…`) work too.
-2. **Fallback:** keep one subfolder per producer under a single parent folder, set as `DROPBOX_ROOT_PATH`
-   (e.g. `/Cabi & Friends/Producers`). A subfolder matches when its name equals the producer's name, its Japanese
-   name in brackets, or contains the Airtable record ID (`recXXXXXXXXXXXXXX`). Ambiguous or unmatched folders are
-   listed in the run report, never guessed.
+### Access is limited to one folder
+The Dropbox app is an **App folder** app: Dropbox only lets it see `Dropbox › Apps › <app name>`, nothing else in the
+account, and only with read permissions (`files.metadata.read`, `files.content.read`). The connection's refresh token is
+stored encrypted in Supabase Vault (`dropbox_refresh_token`) and is only used inside the Edge Function.
 
-Inside a folder: images in subfolders are included, ordered by file name (`01.jpg`, `02.jpg`, … — the first is the
-cover). Anything whose name starts with `_` (e.g. a `_rejects` folder) is ignored. iPhone HEIC photos are converted.
-Images are stored as 2048 px JPEGs at `producer_images/<Airtable record ID>/…` — the record ID never changes, so
-renaming a producer doesn't re-upload anything. (`IMAGE_MODE=original` stores the original files instead.)
+### Folders and photos
+- One subfolder per producer inside the app folder, named after the producer (`Yamada Seiyu`), its Japanese name in
+  brackets (`秋田今野商店`) or containing its Airtable record ID (`recXXXXXXXXXXXXXX`). Unmatched or ambiguous folders
+  are listed in the run report, never guessed. Airtable's "Image Dropbox folder" links are ignored in this mode.
+- Photos are ordered by file name (`01.jpg`, `02.jpg`, …); the first is the cover. Subfolders inside a producer folder
+  are included; anything starting with `_` (e.g. `_rejects`) is ignored. iPhone HEIC photos are converted.
+- Stored as 2048 px JPEGs at `producer_images/<Airtable record ID>/…`, so renaming a producer never re-uploads anything.
 
 ### What a sync does
-- **New or edited photos** are copied. Unchanged ones (same Dropbox content hash) are skipped, so an hourly run
-  usually downloads nothing. An edited photo gets a new URL, so no browser shows the old one.
-- **Deleted photos** disappear from the site at the next run but stay in storage for 7 days (`DELETE_AFTER_DAYS`).
-  Put the file back within that time and it's restored without re-uploading.
-- **Safety:** if a folder can't be read (link revoked, folder moved, Dropbox down), that producer is skipped and
-  nothing is hidden. If a folder that had photos suddenly reads as empty, its photos are kept and it's reported.
-- Only the **Image URLs** field in Airtable is written, and only when the list changed.
-- Each run stops starting new downloads before the Edge Function time limit; the next run continues. The first
-  sync of many large folders may take a few runs.
-- Every run is logged: `select * from dropbox_sync_runs order by id desc limit 5;` (`issues` lists anything to fix).
+- **New or edited photos** are copied; unchanged ones (same Dropbox content hash) are skipped. An edited photo gets a
+  new URL, so no browser shows the old one.
+- **Deleted photos** disappear from the site at the next run but stay in storage for 7 days (`DELETE_AFTER_DAYS`);
+  put one back in that time and it's restored without re-uploading.
+- **Safety:** a folder that can't be read is skipped (nothing hidden); a folder that suddenly reads as empty keeps its
+  photos and is reported.
+- Only Airtable's **Image URLs** field is written, and only when the list changed. Then `airtable-sync` runs straight
+  away so the site updates within a minute.
+- Every run is logged: `select status, stats, issues from dropbox_sync_runs order by id desc limit 5;`
 
-### Setup — step by step
-Where each credential goes (none of them ever go in this repo or in browser code):
-
-| Credential | Where you enter it |
+### Secrets (Supabase → Edge Functions → Secrets — none of these are in Vercel or the repo)
+| Secret | What it is |
 |---|---|
-| Dropbox app key, app secret, refresh token | Supabase → **Edge Functions → Secrets** (the script does it) |
-| Airtable token for the image sync (read + write) | Supabase → **Edge Functions → Secrets** |
-| `DROPBOX_SYNC_SECRET` | Supabase → Edge Functions → Secrets **and** Supabase → Vault (as `dropbox_sync_secret`) |
-| Airtable token for the website (read only) | Vercel → Settings → **Environment Variables** |
-| `CRON_SECRET` | Vercel env vars **and** Supabase → Vault (as `cron_secret`) |
+| `AIRTABLE_TOKEN` | Airtable personal access token, `data.records:read` + `data.records:write`, CABI & FRIENDS base only |
+| `AIRTABLE_BASE_ID` | `appdjYvUXMIWAs9go` |
+| `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET` | From the Dropbox app's Settings tab |
+| `DROPBOX_ROOT_PATH` | `/` — the app folder itself |
+| `SYNC_SECRET` | Random; authorises Cron → functions. A copy lives in Vault as `sync_secret` |
 
-**1. Create the Dropbox app** (5 min)
-1. Go to <https://www.dropbox.com/developers/apps> → **Create app** → *Scoped access* → *Full Dropbox*
-   (needed to read your folders; the app gets read-only permissions below) → name it e.g. `cabi-friends-image-sync`.
-2. **Permissions** tab → tick `files.metadata.read`, `files.content.read`, `sharing.read` → **Submit**.
-   Do this *before* step 2 — permissions are fixed into the token when you authorise.
-3. **Settings** tab → note the **App key**; click *Show* for the **App secret**. No redirect URI is needed.
-   Leave the app in *Development* status — that's fine for your own account.
+Vault also holds `project_url` (used by the Cron jobs) and `dropbox_refresh_token` (written by the connect flow).
+`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are provided to Edge Functions automatically.
 
-**2. Install the Supabase CLI and link the project** (once, on your Mac)
-```bash
-brew install supabase/tap/supabase
-```
-```bash
-supabase login && supabase link --project-ref YOUR-PROJECT-REF
-```
-(The project ref is the `xxxx` in `https://xxxx.supabase.co`.)
-
-**3. Authorise Dropbox** — the script asks for the key and secret (hidden input), opens Dropbox's *Allow* page, then
-stores the key, secret and a long-lived **refresh token** as Supabase secrets. Nothing is saved to disk.
-```bash
-bash scripts/dropbox-auth.sh
-```
-The function swaps the refresh token for a short-lived access token on every run. It keeps working until someone
-disconnects the app in Dropbox → Settings → Connected apps (then just run the script again).
-
-**4. Create an Airtable token for the sync** — <https://airtable.com/create/tokens> → *Create token* → name
-`dropbox-image-sync`, scopes `data.records:read` + `data.records:write`, access: **only** the Cabi & Friends base.
-Make a second token for the website with `data.records:read` only. Two tokens = each can be revoked on its own.
-
-**5. Store the remaining function secrets** — in Supabase → Edge Functions → Secrets → *Add new secret*:
-- `AIRTABLE_TOKEN` = the sync token from step 4
-- `AIRTABLE_BASE_ID` = `appdjYvUXMIWAs9go`
-- `DROPBOX_SYNC_SECRET` = a long random string (e.g. from `openssl rand -hex 32`)
-- optional: `DROPBOX_ROOT_PATH` (fallback parent folder), `DELETE_AFTER_DAYS`, `IMAGE_MODE`,
-  `DROPBOX_TEAM_ROOT_NAMESPACE` (only for Dropbox Business team folders)
-
-(`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are provided to Edge Functions automatically.)
-
-**6. Deploy the function**
-```bash
-supabase functions deploy dropbox-sync
-```
-`supabase/config.toml` turns off JWT checking for this function because it checks `DROPBOX_SYNC_SECRET` instead.
-
-**7. Create the bucket, tables and hourly schedule** — first add four secrets in Supabase →
-**Integrations → Vault → Add new secret** (the UI, so they don't end up in SQL editor history):
-`project_url` = `https://YOUR-PROJECT-REF.supabase.co`, `dropbox_sync_secret` = same as step 5,
-`site_url` = `https://friends.cabifoods.com`, `cron_secret` = same as `CRON_SECRET` in Vercel.
-Then run `supabase/dropbox.sql` in the SQL editor.
-
-**8. Dry run, then a real run** — dry run lists folders and reports what *would* change, writing nothing:
-```bash
-read -rs -p "DROPBOX_SYNC_SECRET: " S; echo; curl -sS -X POST "https://YOUR-PROJECT-REF.supabase.co/functions/v1/dropbox-sync" -H "Authorization: Bearer $S" -H "Content-Type: application/json" -d '{"dry_run":true}'; unset S
-```
-Check the report with `select status, stats, issues from dropbox_sync_runs order by id desc limit 1;`.
-Run again without `"dry_run":true` (or wait for :05), then check Airtable's **Image URLs** column.
-After :20 (or *Sync from Airtable* in /admin → Producers) the photos are on the website.
-
-**9. Vercel** — add `AIRTABLE_TOKEN` (the read-only one), `AIRTABLE_BASE_ID` and `CRON_SECRET`, then redeploy.
+### Setting it up from scratch
+1. Run `supabase/schema.sql`, `supabase/seed.sql`, then `supabase/dropbox.sql` (SQL editor, or
+   `supabase db query --linked -f <file>`).
+2. Create the Vault secrets `project_url` and `sync_secret`, and the Edge Function secrets above
+   (`bash scripts/set-secret.sh NAME` prompts with hidden input).
+3. `supabase functions deploy --use-api` (deploys `dropbox-sync`, `airtable-sync`, `dropbox-connect`).
+4. Dropbox: <https://www.dropbox.com/developers/apps> → Create app → *Scoped access* → **App folder**.
+   Permissions: `files.metadata.read`, `files.content.read` → Submit. Settings → OAuth 2 → Redirect URIs →
+   `https://<project-ref>.supabase.co/functions/v1/dropbox-connect` → Add. Put the App key/secret in Supabase.
+5. `bash scripts/dropbox-connect-link.sh` → open the link signed in to the right Dropbox account → Allow.
+   **Changing the app key/secret afterwards breaks the connection** — reconnect with a new link if you do.
+6. Dry run: call `dropbox-sync` with body `{"dry_run":true}` and `Authorization: Bearer <SYNC_SECRET>`, then check
+   `dropbox_sync_runs`. Body `{"disconnect":true}` revokes the Dropbox connection and deletes the token.
 
 ### Airtable → website
-`/api/sync-airtable` copies these fields (by field ID, so renaming columns is safe): Place / 工房名 →
-names (`Name (日本語)` is split into EN + JA), Craftsperson → maker, Craft / 分野 → makes + tags, Prefecture,
+`airtable-sync` copies these fields (by field ID, so renaming columns is safe): Place / 工房名 → names
+(`Name (日本語)` is split into EN + JA), Craftsperson → maker, Craft / 分野 → makes + tags, Prefecture,
 Website (Instagram links go to Instagram), Feature # → number, Image URLs → photos. Email and Contact status are
-never read. Rows whose name starts with a bracket — `(Placeholder) …` — are treated as notes and skipped.
-New producers arrive as drafts; publish them in /admin → Producers (or set `AIRTABLE_PUBLISHED_FIELD` to a
-checkbox's field ID to control it from Airtable). Descriptions and map coordinates are set in /admin for now
-because the Airtable table has no columns for them. Producers removed from Airtable are unpublished, not deleted.
+never read. Rows whose name starts with a bracket — `(Placeholder) …` — are treated as notes and skipped, as are rows
+without a recognisable prefecture (they're listed in the function's response). New producers arrive as drafts;
+publish them in /admin → Producers (or set `AIRTABLE_PUBLISHED_FIELD` to a checkbox's field ID). Descriptions and
+map coordinates are set in /admin because the Airtable table has no columns for them. Producers removed from
+Airtable are unpublished, not deleted. Content edits reach the live site within ~15 minutes — no redeploy.

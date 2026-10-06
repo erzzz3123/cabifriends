@@ -1,6 +1,6 @@
 -- Dropbox → Supabase Storage image sync: storage bucket, bookkeeping tables, hourly schedule.
 -- Run in Supabase → SQL editor AFTER schema.sql. Safe to re-run.
--- Before the schedule at the bottom will work, store two secrets in Vault (see README → "Dropbox image sync").
+-- Before the schedule at the bottom will work, store two secrets in Vault (see the schedule section).
 
 -- ---------- bucket ----------
 -- Public: the website shows these images. Only the Edge Function (service role) can write.
@@ -53,30 +53,55 @@ alter table dropbox_folders enable row level security;
 alter table dropbox_sync_runs enable row level security;
 revoke all on dropbox_images, dropbox_folders, dropbox_sync_runs from anon, authenticated;
 
+-- ---------- Vault helpers (server only) ----------
+-- Lets Edge Functions store/read one Vault secret (the Dropbox refresh token) with the service-role key.
+-- Nobody else can execute them: not the public anon key, not signed-in users.
+create or replace function private_set_secret(p_name text, p_value text) returns void
+language plpgsql security definer set search_path = public, vault as $$
+declare v_id uuid;
+begin
+  select id into v_id from vault.secrets where name = p_name;
+  if v_id is null then perform vault.create_secret(p_value, p_name); else perform vault.update_secret(v_id, p_value); end if;
+end $$;
+create or replace function private_get_secret(p_name text) returns text
+language sql stable security definer set search_path = public, vault as $$
+  select decrypted_secret from vault.decrypted_secrets where name = p_name and p_name in ('dropbox_refresh_token');
+$$;
+create or replace function private_delete_secret(p_name text) returns void
+language sql security definer set search_path = public, vault as $$
+  delete from vault.secrets where name = p_name and p_name in ('dropbox_refresh_token');
+$$;
+revoke execute on function private_set_secret(text, text) from public, anon, authenticated;
+revoke execute on function private_delete_secret(text) from public, anon, authenticated;
+grant execute on function private_delete_secret(text) to service_role;
+revoke execute on function private_get_secret(text) from public, anon, authenticated;
+grant execute on function private_set_secret(text, text) to service_role;
+grant execute on function private_get_secret(text) to service_role;
+
 -- ---------- schedule (Supabase Cron) ----------
+-- Needs two Vault secrets: `project_url` (https://<ref>.supabase.co) and `sync_secret` (same value as the SYNC_SECRET
+-- Edge Function secret).
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- Every hour at :05 → Dropbox sync (copies images, writes Image URLs to Airtable).
+-- Every hour at :05 → Dropbox sync (copies images, writes Image URLs to Airtable, then refreshes the site).
 select cron.unschedule('dropbox-image-sync') where exists (select 1 from cron.job where jobname = 'dropbox-image-sync');
 select cron.schedule('dropbox-image-sync', '5 * * * *', $$
   select net.http_post(
     url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/dropbox-sync',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'dropbox_sync_secret')),
-    body := '{}'::jsonb,
-    timeout_milliseconds := 10000)
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'sync_secret')),
+    body := '{}'::jsonb, timeout_milliseconds := 10000)
 $$);
 
--- Every hour at :20 → website pulls Airtable (names, prefectures, Image URLs…) into its database.
--- Needs the `site_url` and `cron_secret` Vault secrets (CRON_SECRET must match the Vercel env var).
+-- Every 15 minutes → Airtable content (names, prefectures, Image URLs…) into the website's database.
 select cron.unschedule('airtable-site-sync') where exists (select 1 from cron.job where jobname = 'airtable-site-sync');
-select cron.schedule('airtable-site-sync', '20 * * * *', $$
-  select net.http_get(
-    url := (select decrypted_secret from vault.decrypted_secrets where name = 'site_url') || '/api/sync-airtable',
-    headers := jsonb_build_object('Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')),
-    timeout_milliseconds := 10000)
+select cron.schedule('airtable-site-sync', '*/15 * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/airtable-sync',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'sync_secret')),
+    body := '{}'::jsonb, timeout_milliseconds := 60000)
 $$);
 
 -- Useful checks:

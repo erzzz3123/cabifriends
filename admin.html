@@ -226,7 +226,7 @@ window.A={
   act:a=>busy(async()=>{const note=$('#note')?.value||'';await api('admin',{action:a,id:st.sel,note});st.items=st.items.filter(x=>x.id!==st.sel);st.sel=null;render();}),
   save:id=>busy(async()=>{const j=await api('admin',{action:'save',friend:{id,...formData()}});const f=st.items.find(x=>x.id===id);Object.assign(f,formData(),j.friend);render();$('#msg').textContent=T('Saved.','保存しました。');}),
   publish:(id,on)=>busy(async()=>{const j=await api('admin',{action:'publish',friend_id:id,published:on});Object.assign(st.items.find(x=>x.id===id),j.friend);render();}),
-  sync:async()=>{const m=$('#smsg');m.textContent=T('Syncing…','同期中…');try{const j=await api('sync-airtable');m.textContent=j.skipped?T('Airtable sync is not configured.','Airtable同期は未設定です。'):`${j.friends} ${T('synced','件同期')} · ${j.new_images} ${T('new photos','枚の新しい写真')}${j.errors.length?' · '+j.errors.length+' '+T('errors (see logs)','件のエラー'):''}`;}catch(e){m.textContent=e.message;}},
+  sync:async()=>{const m=$('#smsg');m.textContent=T('Syncing…','同期中…');try{const {data:{session}}=await sb.auth.getSession();const r=await fetch(cfg.url+'/functions/v1/airtable-sync',{method:'POST',headers:{Authorization:'Bearer '+(session?.access_token||'')}});const j=await r.json();if(!r.ok)throw new Error(j.error||('HTTP '+r.status));m.textContent=j.skipped?T('Airtable sync is not configured.','Airtable同期は未設定です。'):`${j.friends} ${T('synced','件同期')} · ${j.new_images} ${T('new photos','枚の新しい写真')}${j.errors.length?' · '+j.errors.length+' '+T('errors (see logs)','件のエラー'):''}`;}catch(e){m.textContent=e.message;}},
 };
 
 applyStatic();
