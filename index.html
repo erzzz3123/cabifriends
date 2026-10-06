@@ -19,6 +19,7 @@
 <script src="/api/data"></script>
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
+<script src="/assets/foods/foods.js" async></script>
 <style>
 :root{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace;--font-mono:var(--font-mono-jp);--ink:var(--cf-black);--bone:var(--cf-bone);--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:40px}
 *{box-sizing:border-box}
@@ -417,6 +418,11 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .note{position:static}
  .ft{grid-template-columns:1fr}
 }
+/* Food pills: a small image floats by the cursor on hover (photos cropped square; transparent PNGs shown whole) */
+#food{position:fixed;left:0;top:0;width:96px;height:96px;pointer-events:none;z-index:45;opacity:0;transition:opacity .15s ease}
+#food.on{opacity:1}
+#food img{width:100%;height:100%;object-fit:cover;border-radius:5px;display:block}
+#food.cut img{object-fit:contain;border-radius:0}
 /* Long-form text (a block of more than 30 words) reads in sentence case; shorter text keeps the all-caps style */
 .long{text-transform:none}
 /* No footer on the About page */
@@ -458,6 +464,7 @@ body.r-about>.ft{display:none}
 </footer>
 <div id="peek"></div>
 <div id="tip"></div>
+<div id="food" aria-hidden="true"><img alt=""></div>
 
 <script>
 (function(){
@@ -983,6 +990,19 @@ new MutationObserver(()=>document.querySelectorAll('#root img:not(.ld)').forEach
 const markLong=()=>{const blocks=new Map();document.querySelectorAll('#root p,#root dd,#root blockquote').forEach(el=>{const k=el.parentElement;blocks.set(k,[...(blocks.get(k)||[]),el]);});
   blocks.forEach(els=>{const long=els.reduce((n,el)=>n+(el.textContent.trim().match(/\S+/g)||[]).length,0)>30;els.forEach(el=>el.classList.toggle('long',long));});};
 new MutationObserver(markLong).observe(document.getElementById('root'),{childList:true,subtree:true});
+/* Food pills → small transparent image by the cursor (window.FOOD_IMG from /assets/foods/foods.js; works for JA labels too) */
+const foodEl=$('#food'),foodImg=foodEl.querySelector('img');let jaToEn=null;
+const foodSrc=el=>{const F=window.FOOD_IMG;if(!F)return null;const t=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+  if(!jaToEn){jaToEn={};Object.entries(window.JA_TERMS||{}).forEach(([en,ja])=>jaToEn[ja]=en);}
+  const f=F[t]||F[jaToEn[t]];return f?'/assets/foods/'+f:null;};
+const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-100),y=Math.max(e.clientY-104,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
+if(hoverable){
+  document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag');if(!el)return;const src=foodSrc(el);if(!src)return;
+    if(foodImg.getAttribute('src')!==src){foodImg.src=src;foodEl.classList.toggle('cut',/\.png$/i.test(src));}foodMove(e);foodEl.classList.add('on');});
+  document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
+  document.addEventListener('mousemove',e=>{if(foodEl.classList.contains('on'))foodMove(e);});
+  addEventListener('hashchange',()=>foodEl.classList.remove('on'));
+}
 const B=document.body;
 const lift=()=>{if(!B.classList.contains('intro'))return;const now=performance.now();
   if(!B.classList.contains('i1')){B.classList.add('i1');window.__t1=now;}

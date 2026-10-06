@@ -157,3 +157,11 @@ without a recognisable prefecture (they're listed in the function's response). N
 publish them in /admin → Producers (or set `AIRTABLE_PUBLISHED_FIELD` to a checkbox's field ID). Descriptions and
 map coordinates are set in /admin because the Airtable table has no columns for them. Producers removed from
 Airtable are unpublished, not deleted. Content edits reach the live site within ~15 minutes — no redeploy.
+
+## Food pill images
+Hovering a food pill (map drawer "Known for", filters, profiles) shows a small photo by the cursor.
+Images live in `assets/foods/` and are listed in `assets/foods/foods.js` (`"Matcha": "matcha.jpg"`, keyed by the English
+name used in `data.js`; Japanese labels are matched automatically). The current set is 129 public-domain / CC0
+placeholder photos from Wikimedia Commons — sources in `assets/foods/CREDITS.md`. 51 foods have no image yet and simply
+show nothing. To add or replace one: put a 240px JPEG (or a transparent PNG, shown uncropped) in `assets/foods/`
+and add/update its line in `foods.js`.
