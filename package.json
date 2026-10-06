@@ -1,0 +1,15 @@
+{
+  "name": "cabifriends",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "for f in api/*.js lib/*.js data.js i18n.js; do node --check \"$f\" || exit 1; done"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

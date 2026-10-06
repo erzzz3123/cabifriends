@@ -1,0 +1,15 @@
+name: check
+on: [push, pull_request]
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check
+      - name: No secrets committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example$'
+          ! git grep -nE 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{20,}|sb_secret_[A-Za-z0-9]{10,}|pat[A-Za-z0-9]{14}\.[a-f0-9]{20,}'

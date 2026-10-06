@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Cabi &amp; Friends — Admin</title>
+<link rel="stylesheet" href="/_ds/tokens/colors.css">
+<link rel="stylesheet" href="/_ds/tokens/friends.css">
+<script src="/data.js"></script>
+<script src="/i18n.js"></script>
+<script src="/api/config"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+@font-face{font-family:"Ginto Local";src:url("/fonts/Ginto-Light.ttf") format("truetype");font-weight:100 900;font-display:swap}
+:root{--ink:var(--cf-black);--bone:#fff;--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:36px}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff}
+body{color:var(--ink);font-family:"Ginto Local","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;font-weight:300;text-transform:uppercase;letter-spacing:.02em;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+::selection{background:var(--ink);color:var(--bone)}
+html:root,html [data-theme="friends"],body[data-theme="friends"]{--bone:#FFFFFF;--cf-bone:#FFFFFF;background:#fff}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit}
+.wrap{padding-left:var(--pad);padding-right:var(--pad)}
+.meta{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:400}
+.mute{color:var(--mute)}
+.util{display:flex;align-items:stretch;justify-content:space-between;border-bottom:1px solid var(--ink);height:28px}
+.util .tabs{display:flex}
+.util a,.util .who{white-space:nowrap;display:flex;align-items:center;padding:0 13px;border-right:1px solid var(--ink);font-size:10px;letter-spacing:.06em;font-weight:400}
+.util a:hover{background:var(--hov);text-decoration:none}.util a.on{background:var(--ink);color:var(--bone)}
+.util .lang{display:flex;align-items:center;gap:8px;padding:0 var(--pad) 0 13px;font-size:10px;letter-spacing:.06em}
+.util .lang button{background:none;border:0;padding:0;cursor:pointer;color:var(--mute)}.util .lang button.on{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:22px;padding-top:9px;padding-bottom:9px;border-bottom:1px solid var(--ink);min-height:90px}
+.logo{display:block;width:86px;height:65px;background:url("/assets/cabi-friends-black.png") center/193px auto no-repeat;flex:none}
+.nav{display:flex;gap:25px;align-items:center;flex-wrap:wrap;font-size:11px;letter-spacing:.06em;font-weight:400}
+.nav button{background:none;border:0;border-bottom:1px solid transparent;padding:0 0 2px;cursor:pointer}
+.nav button:hover,.nav button.on{border-bottom-color:var(--ink)}
+.btn{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--bone);border:1px solid var(--ink);padding:7px 13px;cursor:pointer;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:400}
+.btn:hover{background:transparent;color:var(--ink);text-decoration:none}
+.btn.ghost{background:transparent;color:var(--ink)}.btn.ghost:hover{background:var(--ink);color:var(--bone)}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg button{background:none;border:0;padding:6px 11px;cursor:pointer;font-size:10px;letter-spacing:.06em;font-weight:400}
+.seg button+button{border-left:1px solid var(--ink)}.seg button:hover{background:var(--hov)}.seg button.on{background:var(--ink);color:var(--bone)}
+.bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding-top:14px;padding-bottom:14px;border-bottom:1px solid var(--ink)}
+.cols{display:grid;grid-template-columns:minmax(260px,4fr) 8fr;gap:27px;align-items:start}
+.list{border-right:1px solid var(--soft);min-height:60vh}
+.row{display:grid;grid-template-columns:40px 1fr auto;gap:10px;padding:12px var(--pad) 12px 0;border-bottom:1px solid var(--soft);cursor:pointer;font-size:12px;line-height:1.38}
+.row:hover{background:var(--hov)}.row.on{font-style:italic}.row.on .no{text-decoration:underline;text-underline-offset:3px}
+.row .s{color:var(--mute)}
+.pane{padding:22px var(--pad) 72px 0}
+.pane h1{margin:0;font-weight:300;font-size:27px;line-height:1.1}
+.pane h2{margin:28px 0 8px;font-size:10px;letter-spacing:.06em;font-weight:400;color:var(--mute)}
+dl{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;margin:0;font-size:13px}dt{color:var(--mute)}dd{margin:0;text-transform:none}
+.story{text-transform:none;white-space:pre-wrap;font-size:14px;max-width:70ch}
+.photos{display:flex;gap:9px;flex-wrap:wrap}
+.photos label{position:relative;display:block;cursor:pointer}
+.photos img{height:110px;display:block;border-radius:9px}
+.photos input{position:absolute;top:6px;left:6px;accent-color:var(--ink)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+.fld{display:grid;gap:5px;padding:12px 0;border-bottom:1px solid var(--soft)}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:10px;letter-spacing:.06em;font-weight:400}
+.fld input,.fld select,.fld textarea{font-weight:300;font-size:15px;background:transparent;border:0;padding:3px 0;outline:none;width:100%;text-transform:none}
+.fld textarea{min-height:90px;resize:vertical;line-height:1.5}
+.fld:focus-within{border-bottom-color:var(--ink)}
+.acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:20px}
+.msg{font-size:12px;flex-basis:100%;min-height:1.5em}
+.pill{display:inline-block;border:1px solid rgba(67,47,41,.35);border-radius:40px;padding:2px 9px 1px;font-size:10px;letter-spacing:.06em;font-weight:400}
+.pill.on{background:var(--ink);color:var(--bone);border-color:var(--ink)}
+.empty{padding:54px 0;color:var(--mute)}
+.login{max-width:460px;padding-top:72px;padding-bottom:110px}
+.login h1{font-weight:300;font-size:45px;line-height:1.05;margin:0 0 14px}
+@media (max-width:760px){:root{--pad:16px}.cols{grid-template-columns:1fr}.list{border-right:0;min-height:0}.pane{padding-left:var(--pad)}.fgrid{grid-template-columns:1fr}.hd{flex-wrap:wrap}}
+</style>
+</head>
+<body data-theme="friends">
+<div class="util">
+  <div class="tabs"><a href="/">Cabi &amp; Friends ↗</a><a class="on" data-t="Admin" data-ja="管理">Admin</a><span class="who" id="who" hidden></span></div>
+  <div class="lang"><button data-l="en" onclick="A.lang('en')">EN</button><span class="mute">/</span><button data-l="ja" onclick="A.lang('ja')">日本語</button></div>
+</div>
+<header class="hd wrap">
+  <a class="logo" href="/" aria-label="Cabi &amp; Friends"></a>
+  <nav class="nav" id="nav" hidden>
+    <button data-v="submissions" onclick="A.view('submissions')" data-t="Submissions" data-ja="応募">Submissions</button>
+    <button data-v="friends" onclick="A.view('friends')" data-t="Producers" data-ja="生産者">Producers</button>
+    <button onclick="A.signOut()" data-t="Sign out" data-ja="ログアウト">Sign out</button>
+  </nav>
+</header>
+<main id="root"></main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s),app=$('#root');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let LANG=(()=>{try{return localStorage.getItem('cf_lang')==='ja'?'ja':'en'}catch(e){return 'en'}})();
+const T=(en,ja)=>LANG==='ja'?ja:en;
+const tr=s=>LANG==='ja'&&s?((window.JA_TERMS||{})[s]||s):s;
+const P={};PREFS.forEach(p=>P[p.slug]=p);
+const prefName=s=>P[s]?(LANG==='ja'?P[s].name_ja:P[s].name_en):(s||'—');
+const TYPES=['Producer','Farmer','Restaurant','Shop','Craft'];
+const date=d=>d?new Date(d).toLocaleDateString(LANG==='ja'?'ja-JP':'en-GB',{year:'numeric',month:'short',day:'numeric'}):'';
+const cfg=window.CF_SUPABASE||{};
+const sb=cfg.url&&cfg.anonKey&&window.supabase?supabase.createClient(cfg.url,cfg.anonKey):null;
+const st={view:'submissions',status:'new',items:[],sel:null,email:null};
+
+function applyStatic(){document.documentElement.lang=LANG;document.querySelectorAll('[data-t]').forEach(e=>e.textContent=T(e.dataset.t,e.dataset.ja));document.querySelectorAll('.lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===LANG));document.querySelectorAll('#nav [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===st.view));}
+
+async function api(path,body){
+  const {data:{session}}=await sb.auth.getSession();
+  const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+(session?.access_token||''),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===403&&j.error==='not_admin'){notAdmin();throw new Error('not_admin');}
+  if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+  return j;
+}
+
+/* ---------- sign in ---------- */
+function renderLogin(sent){
+  $('#nav').hidden=true;$('#who').hidden=true;
+  app.innerHTML=`<section class="login wrap"><div class="meta mute" style="margin-bottom:14px">${T('Staff only','スタッフ専用')}</div>
+    <h1>${T('Review submissions','応募の確認')}</h1>
+    ${!sb?`<p>${T('Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel.','Supabaseが未設定です。VercelでSUPABASE_URLとSUPABASE_ANON_KEYを設定してください。')}</p>`:
+    sent?`<p>${T('Check your inbox. We sent a sign-in link to','ログイン用リンクを送信しました：')} <span style="text-transform:none">${esc(sent)}</span></p><button class="btn ghost" onclick="A.login()">${T('Use another email','別のメールアドレスを使う')}</button>`:
+    `<form onsubmit="return A.sendLink(event)"><div class="fld"><label>${T('Email','メールアドレス')}</label><input type="email" name="email" required autocomplete="email" placeholder="name@cabifoods.com"></div>
+     <div class="acts"><button class="btn" type="submit">${T('Email me a sign-in link','ログインリンクを送る')}</button><span class="msg mute" id="lmsg"></span></div></form>`}
+  </section>`;
+}
+function notAdmin(){app.innerHTML=`<section class="login wrap"><h1>${T('No access','アクセス権がありません')}</h1><p>${T('You are signed in as','ログイン中：')} <span style="text-transform:none">${esc(st.email)}</span>${T(', which is not on the admin list.','。管理者リストに登録されていません。')}</p><button class="btn ghost" onclick="A.signOut()">${T('Sign out','ログアウト')}</button></section>`;}
+
+/* ---------- lists ---------- */
+async function load(){
+  app.innerHTML=`<div class="wrap meta mute" style="padding:54px var(--pad)">${T('Loading…','読み込み中…')}</div>`;
+  try{
+    const j=st.view==='friends'?await api('admin?view=friends'):await api('admin?view=submissions&status='+st.status);
+    st.items=j.friends||j.submissions||[];render();
+  }catch(e){if(e.message!=='not_admin')app.innerHTML=`<div class="wrap empty">${esc(e.message)}</div>`;}
+}
+function render(){
+  applyStatic();$('#nav').hidden=false;$('#who').hidden=false;$('#who').textContent=st.email||'';
+  const sel=st.items.find(x=>x.id===st.sel);
+  const bar=st.view==='friends'
+    ?`<span class="meta">${st.items.length} ${T('producers','件の生産者')} · ${st.items.filter(f=>f.published).length} ${T('published','件公開中')}</span><button class="btn ghost" onclick="A.sync()">${T('Sync from Airtable','Airtableから同期')}</button><span class="meta mute" id="smsg"></span>`
+    :`<span class="seg">${[['new','New','新規'],['approved','Approved','承認済み'],['rejected','Rejected','見送り']].map(([k,en,ja])=>`<button class="${st.status===k?'on':''}" onclick="A.status('${k}')">${T(en,ja)}</button>`).join('')}</span><span class="meta mute">${st.items.length} ${T('shown','件')}</span>`;
+  const rows=st.items.map((x,i)=>st.view==='friends'
+    ?`<div class="row ${x.id===st.sel?'on':''}" onclick="A.pick(${x.id})"><span class="no">[${String(x.no??'—').padStart(2,'0')}]</span><span>${esc(x.name_en)}<br><span class="s">${esc(x.name_ja||'')} ${prefName(x.prefecture)}</span></span><span class="pill ${x.published?'on':''}">${x.published?T('Live','公開'):T('Draft','非公開')}</span></div>`
+    :`<div class="row ${x.id===st.sel?'on':''}" onclick="A.pick(${x.id})"><span class="no">[${String(i+1).padStart(2,'0')}]</span><span>${esc(x.business)}<br><span class="s">${prefName(x.prefecture)} · ${esc(tr(x.category))}</span></span><span class="s meta">${date(x.created_at)}</span></div>`).join('');
+  app.innerHTML=`<div class="bar wrap">${bar}</div>
+  <section class="cols" style="padding-left:var(--pad)"><div class="list">${rows||`<div class="empty">${T('Nothing here.','該当なし')}</div>`}</div>
+  <div class="pane" id="pane">${sel?(st.view==='friends'?friendPane(sel):subPane(sel)):`<div class="empty">${T('Select an entry on the left.','左から選択してください。')}</div>`}</div></section>`;
+}
+
+/* ---------- producer form (shared by approve + edit) ---------- */
+function form(f){
+  const fld=(k,en,ja,o={})=>`<div class="fld ${o.full?'full':''}"><label>${T(en,ja)}${o.req?' *':''}</label>${o.area?`<textarea name="${k}">${esc(f[k])}</textarea>`:`<input name="${k}" value="${esc(f[k])}" ${o.req?'required':''} ${o.ph?`placeholder="${esc(o.ph)}"`:''}>`}</div>`;
+  const list=v=>Array.isArray(v)?v.join(', '):(v||'');
+  return `<form id="ff" class="fgrid" onsubmit="return false">
+    ${fld('name_en','Name (EN)','名前（英語）',{req:1})}${fld('name_ja','Name (JA)','名前（日本語）')}
+    ${fld('slug','URL slug','URLスラッグ',{ph:T('auto from name','名前から自動生成')})}${fld('maker','Maker','つくり手')}
+    <div class="fld"><label>${T('Category','種類')}</label><select name="category">${TYPES.map(c=>`<option value="${c}" ${f.category===c?'selected':''}>${tr(c)}</option>`).join('')}</select></div>
+    <div class="fld"><label>${T('Prefecture','都道府県')} *</label><select name="prefecture" required>${REGIONS.map(r=>`<optgroup label="${tr(r)}">${PREFS.filter(p=>p.region===r).map(p=>`<option value="${p.slug}" ${p.slug===f.prefecture?'selected':''}>${p.name_en} ${p.name_ja}</option>`).join('')}</optgroup>`).join('')}</select></div>
+    ${fld('city','City','市区町村')}${fld('makes','Makes','つくっているもの')}
+    ${fld('latitude','Latitude','緯度',{ph:T('blank = prefecture centre','空欄＝県の中心')})}${fld('longitude','Longitude','経度',{ph:T('blank = prefecture centre','空欄＝県の中心')})}
+    ${fld('website','Website','ウェブサイト')}${fld('instagram','Instagram','Instagram')}
+    <div class="fld full"><label>${T('Food tags (comma separated)','食のタグ（カンマ区切り）')}</label><input name="tags" value="${esc(list(f.tags))}"></div>
+    ${fld('description','Description (EN)','紹介（英語）',{full:1,area:1})}${fld('description_ja','Description (JA)','紹介（日本語）',{full:1,area:1})}
+    ${fld('story','Story (EN) — blank line between paragraphs','ストーリー（英語）— 段落は空行で区切る',{full:1,area:1})}${fld('story_ja','Story (JA)','ストーリー（日本語）',{full:1,area:1})}
+    ${fld('relationship_to_cabi','Why they’re a Cabi Friend','Cabiとの関係',{full:1,area:1})}
+  </form>`;
+}
+const formData=()=>{const o=Object.fromEntries(new FormData($('#ff')));['latitude','longitude'].forEach(k=>{if(o[k]==='')o[k]=null;});return o;};
+
+function subPane(s){
+  const cat={'Craft / Maker':'Craft',Other:'Producer'}[s.category]||s.category;
+  const draft={name_en:s.business,name_ja:s.name_ja,prefecture:s.prefecture,city:s.city,makes:s.makes,category:cat,website:s.website,instagram:s.instagram,story:s.story,
+    description:(s.story||'').split(/\n\s*\n/)[0].slice(0,400),tags:s.makes?[s.makes]:[]};
+  const done=s.status!=='new';
+  return `<div class="meta mute">${T('Submission','応募')} #${s.id} · ${date(s.created_at)} · ${s.who==='other'?T('Recommended by','推薦者'):T('From the producer','本人より')}</div>
+    <h1 style="margin-top:8px">${esc(s.business)}</h1>${s.name_ja?`<div style="font-size:17px;text-transform:none">${esc(s.name_ja)}</div>`:''}
+    <h2>${T('Submitted','応募内容')}</h2>
+    <dl><dt>${T('Name','名前')}</dt><dd>${esc(s.name)}</dd><dt>${T('Email','メール')}</dt><dd><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></dd>
+      <dt>${T('Place','場所')}</dt><dd>${esc(s.city)} ${prefName(s.prefecture)}</dd><dt>${T('Category','種類')}</dt><dd>${esc(tr(s.category))}</dd>
+      <dt>${T('Makes','つくるもの')}</dt><dd>${esc(s.makes)}</dd><dt>${T('Website','サイト')}</dt><dd>${esc(s.website)}</dd><dt>Instagram</dt><dd>${esc(s.instagram)}</dd>
+      <dt>${T('Language','言語')}</dt><dd>${s.lang==='ja'?'日本語':'English'}</dd>
+      ${s.reviewed_by?`<dt>${T('Reviewed','確認者')}</dt><dd>${esc(s.reviewed_by)} · ${date(s.reviewed_at)}</dd>`:''}${s.review_note?`<dt>${T('Note','メモ')}</dt><dd>${esc(s.review_note)}</dd>`:''}</dl>
+    ${s.story?`<h2>${T('Their story','ストーリー')}</h2><div class="story">${esc(s.story)}</div>`:''}
+    <h2>${T('Photos','写真')} (${s.photos.length})${!done&&s.photos.length?` — ${T('ticked photos are published','チェックした写真を公開')}`:''}</h2>
+    <div class="photos">${s.photos.map(p=>`<label><img src="${esc(p.url)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'pill',textContent:'${esc(p.path.split('.').pop())}'}))">${done?'':`<input type="checkbox" name="ph" value="${esc(p.path)}" ${/\.(jpe?g|png|webp|gif|avif)$/i.test(p.path)?'checked':'disabled'}>`}</label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
+    ${s.status==='approved'?`<div class="acts">${s.friend?`<a class="btn" href="/#/friend/${esc(s.friend.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a><span class="pill ${s.friend.published?'on':''}">${s.friend.published?T('Live','公開'):T('Draft','非公開')}</span>`:''}</div>`
+    :s.status==='rejected'?`<div class="acts"><button class="btn ghost" onclick="A.act('reopen')">${T('Move back to New','新規に戻す')}</button></div>`
+    :`<h2>${T('Listing — check and edit before approving','掲載内容 — 承認前に確認・編集')}</h2>${form(draft)}
+      <div class="fld full"><label>${T('Internal note (optional)','内部メモ（任意）')}</label><input id="note"></div>
+      <div class="acts"><button class="btn" onclick="A.approve(true)">${T('Approve &amp; publish','承認して公開')}</button><button class="btn ghost" onclick="A.approve(false)">${T('Approve as draft','承認（非公開）')}</button><button class="btn ghost" onclick="A.act('reject')">${T('Decline','見送る')}</button><span class="msg" id="msg" role="alert"></span></div>`}`;
+}
+function friendPane(f){
+  return `<div class="meta mute">[${String(f.no??'—').padStart(2,'0')}] · ${esc(f.source)} · ${T('updated','更新')} ${date(f.updated_at)}</div>
+    <h1 style="margin-top:8px">${esc(f.name_en)}</h1>
+    <div class="acts" style="padding-top:12px"><span class="pill ${f.published?'on':''}">${f.published?T('Live','公開'):T('Draft','非公開')}</span>
+      <button class="btn ghost" onclick="A.publish(${f.id},${!f.published})">${f.published?T('Unpublish','非公開にする'):T('Publish','公開する')}</button>
+      ${f.published?`<a class="btn ghost" href="/#/friend/${esc(f.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a>`:''}</div>
+    ${f.source==='airtable'?`<p class="meta mute">${T('Synced from Airtable — edits here are overwritten by the next sync.','Airtableから同期 — ここでの編集は次回の同期で上書きされます。')}</p>`:''}
+    <h2>${T('Photos','写真')} (${f.images.length})</h2><div class="photos">${f.images.map(u=>`<label><img src="${esc(u)}" alt=""></label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
+    <h2>${T('Listing','掲載内容')}</h2>${form(f)}
+    <div class="acts"><button class="btn" onclick="A.save(${f.id})">${T('Save changes','変更を保存')}</button><span class="msg" id="msg" role="alert"></span></div>`;
+}
+
+/* ---------- actions ---------- */
+const busy=async(fn)=>{const bs=document.querySelectorAll('.acts .btn');bs.forEach(b=>b.disabled=true);const m=$('#msg');if(m)m.textContent=T('Saving…','保存中…');
+  try{await fn();}catch(e){if(m)m.textContent=e.message;bs.forEach(b=>b.disabled=false);}};
+window.A={
+  lang:l=>{LANG=l;try{localStorage.setItem('cf_lang',l)}catch(e){}applyStatic();st.email?render():renderLogin();},
+  login:()=>renderLogin(),
+  sendLink:async e=>{e.preventDefault();const email=new FormData(e.target).get('email').trim();const m=$('#lmsg');m.textContent=T('Sending…','送信中…');
+    const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+'/admin',shouldCreateUser:false}});
+    if(error){m.textContent=T('Could not send a link to that address. Ask a Cabi admin to invite you first.','このアドレスにはリンクを送れません。先に管理者から招待を受けてください。');return false;}
+    renderLogin(email);return false;},
+  signOut:async()=>{await sb.auth.signOut();st.email=null;renderLogin();},
+  view:v=>{st.view=v;st.sel=null;load();},
+  status:s=>{st.status=s;st.sel=null;load();},
+  pick:id=>{st.sel=id;render();if(innerWidth<760)$('#pane').scrollIntoView({behavior:'smooth'});},
+  approve:publish=>busy(async()=>{const s=st.items.find(x=>x.id===st.sel);
+    const photos=[...document.querySelectorAll('.photos input[name=ph]:checked')].map(i=>i.value);
+    const j=await api('admin',{action:'approve',id:s.id,friend:formData(),photos,publish,note:$('#note').value});
+    st.items=st.items.filter(x=>x.id!==s.id);st.sel=null;render();
+    $('#pane').innerHTML=`<div class="empty" style="color:var(--ink)">${T('Approved','承認しました')}: ${esc(j.friend.slug)} · ${j.photos} ${T('photos','枚の写真')} · ${j.friend.published?T('live on the site within a minute.','1分以内にサイトに反映されます。'):T('saved as a draft (see Producers).','非公開で保存しました（生産者タブ）。')}</div>`;}),
+  act:a=>busy(async()=>{const note=$('#note')?.value||'';await api('admin',{action:a,id:st.sel,note});st.items=st.items.filter(x=>x.id!==st.sel);st.sel=null;render();}),
+  save:id=>busy(async()=>{const j=await api('admin',{action:'save',friend:{id,...formData()}});const f=st.items.find(x=>x.id===id);Object.assign(f,formData(),j.friend);render();$('#msg').textContent=T('Saved.','保存しました。');}),
+  publish:(id,on)=>busy(async()=>{const j=await api('admin',{action:'publish',friend_id:id,published:on});Object.assign(st.items.find(x=>x.id===id),j.friend);render();}),
+  sync:async()=>{const m=$('#smsg');m.textContent=T('Syncing…','同期中…');try{const j=await api('sync-airtable');m.textContent=j.skipped?T('Airtable sync is not configured.','Airtable同期は未設定です。'):`${j.friends} ${T('synced','件同期')} · ${j.new_images} ${T('new photos','枚の新しい写真')}${j.errors.length?' · '+j.errors.length+' '+T('errors (see logs)','件のエラー'):''}`;}catch(e){m.textContent=e.message;}},
+};
+
+applyStatic();
+if(!sb)renderLogin();
+else{
+  let ready=false;
+  sb.auth.onAuthStateChange((ev,session)=>{const email=session?.user?.email||null;if(ready&&email===st.email)return;ready=true;st.email=email;
+    // Deferred: supabase-js deadlocks if auth calls (getSession in api()) run inside this callback.
+    setTimeout(()=>email?load():renderLogin(),0);});
+}
+})();
+</script>
+</body>
+</html>

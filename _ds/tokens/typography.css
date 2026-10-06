@@ -1,0 +1,65 @@
+:root{
+--font-display:"Cagliostro",Georgia,serif;
+--font-body:"Ginto",-apple-system,"Helvetica Neue",Arial,sans-serif;
+/* Futwora Pro is not supplied; Ginto is the fallback */
+--font-ui:"Futwora Pro","Ginto",-apple-system,"Helvetica Neue",Arial,sans-serif;
+--font-blur:"Blur","Ginto",sans-serif;
+
+/* Desktop scale */
+--type-h1-size:50px;--type-h1-lh:1;--type-h1-ls:-0.02em;
+--type-h2-size:40px;--type-h2-lh:1.1;--type-h2-ls:-0.03em;
+--type-h3-size:15px;--type-h3-lh:1.4;--type-h3-ls:-0.03em;
+--type-caption-size:20px;--type-caption-lh:1.4;--type-caption-ls:-0.03em;
+--type-body-size:15px;--type-body-lh:1.5;--type-body-ls:0.02em;
+--type-cta-size:14px;--type-cta-lh:1.2;--type-cta-ls:0;
+--type-listing-size:14px;--type-listing-lh:2;--type-listing-ls:0.02em;
+--type-nav-size:14px;--type-nav-lh:1.2;--type-nav-ls:0;
+--type-footer-size:14px;--type-footer-lh:2.5;--type-footer-ls:0.04em;
+--type-tag-size:12px;--type-tag-lh:1.2;--type-tag-ls:0;
+--type-small-size:12px;--type-small-lh:1.3;--type-small-ls:0.02em;
+--type-sale-size:20px;--type-sale-lh:1.2;--type-sale-ls:-0.03em;
+
+/* Mobile scale */
+--type-m-h1-size:40px;--type-m-h1-lh:1;--type-m-h1-ls:-0.02em;
+--type-m-h2-size:30px;--type-m-h2-lh:1.2;--type-m-h2-ls:-0.02em;
+--type-m-h3-size:15px;--type-m-h3-lh:1.2;--type-m-h3-ls:-0.03em;
+--type-m-body-size:14px;--type-m-body-lh:1.4;--type-m-body-ls:0.02em;
+--type-m-cta-size:13px;--type-m-cta-lh:1.2;--type-m-cta-ls:0;
+--type-m-listing-size:13px;--type-m-listing-lh:2.3;--type-m-listing-ls:0.02em;
+--type-m-nav-size:13px;--type-m-nav-lh:1.2;--type-m-nav-ls:0;
+--type-m-footer-size:13px;--type-m-footer-lh:2.5;--type-m-footer-ls:0;
+--type-m-tag-size:13px;--type-m-tag-lh:1.3;--type-m-tag-ls:0;
+--type-m-small-size:12px;--type-m-small-lh:1.3;--type-m-small-ls:0;
+--type-m-sale-size:16px;--type-m-sale-lh:1.2;--type-m-sale-ls:-0.03em;
+--type-m-caption-size:20px;--type-m-caption-lh:1.5;--type-m-caption-ls:-0.03em;
+
+/* Component text (as built in the Components frame) */
+--type-button-size:13px;--type-button-weight:600;--type-button-lh:1.2;--type-button-ls:-0.03em;
+--type-pill-size:12px;--type-pill-weight:500;--type-pill-lh:1.2;--type-pill-ls:-0.03em;
+--type-navlink-size:12px;--type-navlink-lh:1.2;--type-navlink-ls:0.04em;
+}
+.cabi-h1{font-family:var(--font-display);font-weight:400;font-size:var(--type-h1-size);line-height:var(--type-h1-lh);letter-spacing:var(--type-h1-ls)}
+.cabi-h2{font-family:var(--font-display);font-weight:400;font-size:var(--type-h2-size);line-height:var(--type-h2-lh);letter-spacing:var(--type-h2-ls)}
+.cabi-h3{font-family:var(--font-display);font-weight:400;font-size:var(--type-h3-size);line-height:var(--type-h3-lh);letter-spacing:var(--type-h3-ls)}
+.cabi-caption{font-family:var(--font-display);font-weight:400;font-size:var(--type-caption-size);line-height:var(--type-caption-lh);letter-spacing:var(--type-caption-ls)}
+.cabi-body{font-family:var(--font-body);font-weight:300;font-size:var(--type-body-size);line-height:var(--type-body-lh);letter-spacing:var(--type-body-ls)}
+.cabi-cta{font-family:var(--font-display);font-weight:400;font-size:var(--type-cta-size);line-height:var(--type-cta-lh);letter-spacing:var(--type-cta-ls);text-transform:uppercase}
+.cabi-listing{font-family:var(--font-body);font-weight:300;font-size:var(--type-listing-size);line-height:var(--type-listing-lh);letter-spacing:var(--type-listing-ls)}
+.cabi-nav{font-family:var(--font-display);font-weight:400;font-size:var(--type-nav-size);line-height:var(--type-nav-lh);letter-spacing:var(--type-nav-ls);text-transform:uppercase}
+.cabi-footer{font-family:var(--font-body);font-weight:400;font-size:var(--type-footer-size);line-height:var(--type-footer-lh);letter-spacing:var(--type-footer-ls);text-transform:uppercase}
+.cabi-tag{font-family:var(--font-body);font-weight:400;font-size:var(--type-tag-size);line-height:var(--type-tag-lh);letter-spacing:var(--type-tag-ls);text-transform:uppercase}
+.cabi-small{font-family:var(--font-body);font-weight:300;font-size:var(--type-small-size);line-height:var(--type-small-lh);letter-spacing:var(--type-small-ls)}
+.cabi-sale{font-family:var(--font-ui);font-weight:400;font-size:var(--type-sale-size);line-height:var(--type-sale-lh);letter-spacing:var(--type-sale-ls);font-variant-numeric:tabular-nums}
+@media (max-width:720px){
+.cabi-h1{font-size:var(--type-m-h1-size);line-height:var(--type-m-h1-lh)}
+.cabi-h2{font-size:var(--type-m-h2-size);line-height:var(--type-m-h2-lh);letter-spacing:var(--type-m-h2-ls)}
+.cabi-h3{line-height:var(--type-m-h3-lh)}
+.cabi-caption{line-height:var(--type-m-caption-lh)}
+.cabi-body{font-size:var(--type-m-body-size);line-height:var(--type-m-body-lh)}
+.cabi-cta,.cabi-nav{font-size:var(--type-m-cta-size)}
+.cabi-listing{font-size:var(--type-m-listing-size);line-height:var(--type-m-listing-lh)}
+.cabi-footer{font-size:var(--type-m-footer-size);letter-spacing:0}
+.cabi-tag{font-size:var(--type-m-tag-size);line-height:var(--type-m-tag-lh)}
+.cabi-small{line-height:var(--type-m-small-lh)}
+.cabi-sale{font-size:var(--type-m-sale-size)}
+}
