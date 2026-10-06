@@ -417,6 +417,10 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .note{position:static}
  .ft{grid-template-columns:1fr}
 }
+/* Long-form text (a block of more than 30 words) reads in sentence case; shorter text keeps the all-caps style */
+.long{text-transform:none}
+/* No footer on the About page */
+body.r-about>.ft{display:none}
 /* Photos: 5px corners everywhere (thumbnails, panel, profile, previews, tooltips, the flying image) */
 .photo,.th img,.th video,.th .ph2,.dp-im>img,.dp-im>video,.dp-ph,.fly,#peek img,#peek video,#peek .ph,#tip .tth img,#tip .tth video,#tip .tth span{border-radius:5px}
 .fly{overflow:hidden}
@@ -954,6 +958,7 @@ function route(){
   const parts=path.split('/').filter(Boolean).map(decodeURIComponent);const params=new URLSearchParams(qs||'');
   const r=parts[0]||'directory';
   document.querySelectorAll('#nav a[data-r]').forEach(a=>a.classList.toggle('on',a.dataset.r===r));
+  document.body.classList.toggle('r-about',r==='about');
   peek.style.display='none';tipHide();
   if(r==='directory'||r==='map'){
     state.view=r;if(r==='map')state.sel=parts[1]&&P[parts[1]]?parts[1]:null;
@@ -974,6 +979,10 @@ new MutationObserver(()=>requestAnimationFrame(panelEnd)).observe(document.getEl
 const reveal=im=>{if(im.classList.contains('ld')||im.dataset.q)return;im.dataset.q=1;setTimeout(()=>im.classList.add('ld'),80+Math.random()*420);};
 document.addEventListener('load',e=>{if(e.target.tagName==='IMG'&&e.target.closest('#root'))reveal(e.target);},true);
 new MutationObserver(()=>document.querySelectorAll('#root img:not(.ld)').forEach(im=>{if(im.complete&&im.naturalWidth)reveal(im);})).observe(document.getElementById('root'),{childList:true,subtree:true});
+// A block of text (the paragraphs sharing one column/box) over 30 words reads in sentence case; shorter text stays all caps.
+const markLong=()=>{const blocks=new Map();document.querySelectorAll('#root p,#root dd,#root blockquote').forEach(el=>{const k=el.parentElement;blocks.set(k,[...(blocks.get(k)||[]),el]);});
+  blocks.forEach(els=>{const long=els.reduce((n,el)=>n+(el.textContent.trim().match(/\S+/g)||[]).length,0)>30;els.forEach(el=>el.classList.toggle('long',long));});};
+new MutationObserver(markLong).observe(document.getElementById('root'),{childList:true,subtree:true});
 const B=document.body;
 const lift=()=>{if(!B.classList.contains('intro'))return;const now=performance.now();
   if(!B.classList.contains('i1')){B.classList.add('i1');window.__t1=now;}
