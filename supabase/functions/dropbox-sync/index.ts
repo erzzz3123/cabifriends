@@ -127,7 +127,7 @@ async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; 
     }
     await dropboxLogin();
     if (!opts.only) {
-      try { await syncFoods(sb, { dryRun: opts.dryRun, stats, issues }); }
+      try { if (!(await syncFoods(sb, { dryRun: opts.dryRun, stats, issues, timeUp }))) status = 'partial'; }
       catch (e) { issues.push({ folder: 'foods', problem: `food images folder could not be read: ${msg(e)}` }); status = 'partial'; }
     }
     let producers = (await airtableProducers()).filter((p) => !opts.only || p.id === opts.only);
@@ -256,15 +256,18 @@ async function syncProducer(sb: SupabaseClient, p: Producer, ref: Ref, o: {
 // ---------------------------------------------------------------- food hover images
 
 // FOODS_DROPBOX_LINK: a shared folder of food images named after the food ("Sumo citrus.png", "デコポン.png").
-// Each is copied at 256px (PNG/GIF/WebP keep transparency) to producer_images/_foods/ and listed in the public
-// `food_images` table as { name: file name without extension, url }. Same safety rules as producer folders.
+// Each file is copied byte-for-byte (Dropbox's thumbnail service would flatten transparency onto white) to
+// producer_images/_foods/ and listed in the public `food_images` table as { name: file name without extension, url }.
+// Same safety rules as producer folders.
 const FOODS = '_foods';
-const KEEPS_ALPHA = /\.(png|gif|webp)$/i;
-async function syncFoods(sb: SupabaseClient, o: { dryRun: boolean; stats: Record<string, number>; issues: Issue[] }) {
+const FOOD_MAX = 8 * 1024 * 1024;
+const FOOD_VERSION = (v: string) => 'orig:' + v; // stored copies are originals (older thumbnail copies get replaced)
+// Returns false if it stopped early for time (the next run carries on).
+async function syncFoods(sb: SupabaseClient, o: { dryRun: boolean; stats: Record<string, number>; issues: Issue[]; timeUp: () => boolean }): Promise<boolean> {
   const link = Deno.env.get('FOODS_DROPBOX_LINK');
-  if (!link) return;
+  if (!link) return true;
   const ref = parseFolderUrl(link);
-  if (!ref) { o.issues.push({ folder: link, problem: 'FOODS_DROPBOX_LINK is not a Dropbox folder link' }); return; }
+  if (!ref) { o.issues.push({ folder: link, problem: 'FOODS_DROPBOX_LINK is not a Dropbox folder link' }); return true; }
   const files = (await listImages(ref)).filter((f) => !VIDEO.test(f.name));
   // Report files in the folder that can't be used (e.g. .svg, .psd, .ai, .pdf) so they don't silently go missing.
   const skipped = await listOtherFiles(ref);
@@ -274,30 +277,33 @@ async function syncFoods(sb: SupabaseClient, o: { dryRun: boolean; stats: Record
   const rows = (data ?? []) as Row[];
   const byFile = new Map(rows.map((r) => [r.dropbox_file_id, r]));
   const live = rows.filter((r) => !r.missing_since).length;
-  if (files.length === 0 && live > 0) { o.issues.push({ folder: 'foods', problem: `food folder reads as empty; kept its ${live} images to be safe` }); return; }
-  const seen = new Set<string>();
+  if (files.length === 0 && live > 0) { o.issues.push({ folder: 'foods', problem: `food folder reads as empty; kept its ${live} images to be safe` }); return true; }
+  const seen = new Set(files.map((f) => f.id)); // everything listed exists, even if this run doesn't reach it
+  let complete = true;
   for (const f of files) {
-    seen.add(f.id);
     const row = byFile.get(f.id);
-    if (row && row.version === f.version) {
+    if (row && row.version === FOOD_VERSION(f.version)) {
       if (!o.dryRun && (row.missing_since || row.dropbox_path !== f.rel)) await sb.from('dropbox_images').update({ missing_since: null, dropbox_path: f.rel }).eq('id', row.id);
       if (row) { row.missing_since = null; row.dropbox_path = f.rel; }
       continue;
     }
+    if (o.timeUp()) { complete = false; break; }
     o.stats.food_uploaded++;
     if (o.dryRun) continue;
-    const alpha = KEEPS_ALPHA.test(f.name);
-    const resource = ref.kind === 'link' ? { '.tag': 'link', url: ref.url, path: (ref.base ?? '') + f.rel } : { '.tag': 'path', path: ref.path + f.rel };
+    const ext = (f.name.split('.').pop() || '').toLowerCase().replace('jpeg', 'jpg');
+    if (!MIME[ext] || !WEB.test(f.name)) { o.issues.push({ folder: 'foods', problem: `skipped ${f.name}: use PNG (transparent) or JPG` }); o.stats.food_uploaded--; continue; }
+    if (f.size > FOOD_MAX) { o.issues.push({ folder: 'foods', problem: `skipped ${f.name}: ${Math.round(f.size / 1048576)} MB — export it smaller (under ${FOOD_MAX / 1048576} MB, ~500px is plenty)` }); o.stats.food_uploaded--; continue; }
     let bytes: Uint8Array;
     try {
-      const r = await dbx('content', 'files/get_thumbnail_v2', { resource, format: { '.tag': alpha ? 'png' : 'jpeg' }, size: { '.tag': 'w256h256' }, mode: { '.tag': 'fitone_bestfit' } });
+      const r = ref.kind === 'link'
+        ? await dbx('content', 'sharing/get_shared_link_file', { url: ref.url, path: (ref.base ?? '') + f.rel })
+        : await dbx('content', 'files/download', { path: ref.path + f.rel });
       bytes = new Uint8Array(await r.arrayBuffer());
     } catch (e) { o.issues.push({ folder: 'foods', problem: `skipped ${f.name}: ${msg(e)}` }); o.stats.food_uploaded--; continue; }
-    const ext = alpha ? 'png' : 'jpg';
-    const path = `${FOODS}/${slug(f.name.replace(/\.[^.]+$/, '')) || 'food'}-${await shortHash(f.id + ':' + f.version)}.${ext}`;
-    const { error: upErr } = await sb.storage.from(CFG.bucket).upload(path, bytes, { contentType: alpha ? 'image/png' : 'image/jpeg', upsert: true, cacheControl: '31536000' });
+    const path = `${FOODS}/${slug(f.name.replace(/\.[^.]+$/, '')) || 'food'}-${await shortHash(f.id + ':' + FOOD_VERSION(f.version))}.${ext}`;
+    const { error: upErr } = await sb.storage.from(CFG.bucket).upload(path, bytes, { contentType: MIME[ext], upsert: true, cacheControl: '31536000' });
     if (upErr) throw new Error(`upload ${path}: ${upErr.message}`);
-    const saved = { airtable_record_id: FOODS, dropbox_file_id: f.id, dropbox_path: f.rel, version: f.version, storage_path: path, bytes: bytes.byteLength, synced_at: new Date().toISOString(), missing_since: null };
+    const saved = { airtable_record_id: FOODS, dropbox_file_id: f.id, dropbox_path: f.rel, version: FOOD_VERSION(f.version), storage_path: path, bytes: bytes.byteLength, synced_at: new Date().toISOString(), missing_since: null };
     const { error: dbErr } = await sb.from('dropbox_images').upsert(saved, { onConflict: 'airtable_record_id,dropbox_file_id' });
     if (dbErr) throw dbErr;
     if (row && row.storage_path !== path) await sb.storage.from(CFG.bucket).remove([row.storage_path]);
@@ -319,12 +325,13 @@ async function syncFoods(sb: SupabaseClient, o: { dryRun: boolean; stats: Record
     want.set(name, base + r.storage_path.split('/').map(encodeURIComponent).join('/'));
   }
   o.stats.food_images = want.size;
-  if (o.dryRun) return;
+  if (o.dryRun) return complete;
   const { data: cur } = await sb.from('food_images').select('name, url');
   const stale = (cur ?? []).filter((c) => want.get(c.name) !== c.url).map((c) => c.name).filter((n) => !want.has(n));
   if (stale.length) await sb.from('food_images').delete().in('name', stale);
   const changed = [...want].filter(([n, u]) => !(cur ?? []).some((c) => c.name === n && c.url === u)).map(([name, url]) => ({ name, url, updated_at: new Date().toISOString() }));
   if (changed.length) { const { error: e2 } = await sb.from('food_images').upsert(changed, { onConflict: 'name' }); if (e2) throw e2; }
+  return complete;
 }
 
 // ---------------------------------------------------------------- matching producers ↔ folders

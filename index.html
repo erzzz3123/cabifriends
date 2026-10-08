@@ -421,8 +421,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 /* Food pills / Known for / In season: a 100px image floats by the cursor on hover (photos cropped square; transparent PNGs shown whole) */
 #food{position:fixed;left:0;top:0;width:100px;height:100px;pointer-events:none;z-index:45;opacity:0;transition:opacity .15s ease}
 #food.on{opacity:1}
-#food img{width:100%;height:100%;object-fit:cover;border-radius:5px;display:block}
-#food.cut img{object-fit:contain;border-radius:0}
+#food img{width:100%;height:100%;object-fit:contain;display:block;background:none}
 /* Long-form text (a block of more than 30 words) reads in sentence case; shorter text keeps the all-caps style */
 .long{text-transform:none}
 /* No footer on the About page */
@@ -990,21 +989,24 @@ new MutationObserver(()=>document.querySelectorAll('#root img:not(.ld)').forEach
 const markLong=()=>{const blocks=new Map();document.querySelectorAll('#root p,#root dd,#root blockquote').forEach(el=>{const k=el.parentElement;blocks.set(k,[...(blocks.get(k)||[]),el]);});
   blocks.forEach(els=>{const long=els.reduce((n,el)=>n+(el.textContent.trim().match(/\S+/g)||[]).length,0)>30;els.forEach(el=>el.classList.toggle('long',long));});};
 new MutationObserver(markLong).observe(document.getElementById('root'),{childList:true,subtree:true});
-/* Food pills → small transparent image by the cursor (window.FOOD_IMG from /assets/foods/foods.js; works for JA labels too) */
+/* Food pills → your transparent food image by the cursor (window.FOOD_DROPBOX; old romaji names via FOOD_ALIAS; works for JA labels too) */
 const foodEl=$('#food'),foodImg=foodEl.querySelector('img');let jaToEn=null;
-// Your Dropbox food images (window.FOOD_DROPBOX, from /api/data) win; bundled placeholders (FOOD_IMG) fill the gaps.
+// Food images come only from your Dropbox food folder (window.FOOD_DROPBOX, from /api/data) — transparent PNGs, shown as-is.
 // Dropbox file names may be the English name, the Japanese name or the old romaji — case, spacing, accents and plurals ignored.
 const fkey=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]+/g,'');
 let fdx=null;const fdIndex=()=>{if(fdx)return fdx;fdx={};Object.entries(window.FOOD_DROPBOX||{}).forEach(([n,u])=>{const k=fkey(n);fdx[k]=u;fdx[k.replace(/e?s$/,'')]=fdx[k.replace(/e?s$/,'')]||u;});return fdx;};
+// Originals are full-size PNGs; Vercel resizes them to 200px WebP (transparency kept). Not available on localhost.
+const foodSmall=u=>/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?u:'/_vercel/image?url='+encodeURIComponent(u)+'&w=200&q=80';
+foodImg.addEventListener('error',()=>{const m=(foodImg.getAttribute('src')||'').match(/[?&]url=([^&]+)/);if(m)foodImg.src=decodeURIComponent(m[1]);});
 const foodSrc=el=>{let t=el.dataset.food||[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
   if(!jaToEn){jaToEn={};Object.entries(window.JA_TERMS||{}).forEach(([en,ja])=>jaToEn[ja]=en);}
   const en=jaToEn[t]||t,names=[en,(window.JA_TERMS||{})[en],...((window.FOOD_ALIAS||{})[en]||[])].filter(Boolean),D=fdIndex();
-  for(const n of names){const k=fkey(n);const u=D[k]||D[k.replace(/e?s$/,'')];if(u)return u;}
-  const f=(window.FOOD_IMG||{})[en];return f?'/assets/foods/'+f:null;};
+  for(const n of names){const k=fkey(n);const u=D[k]||D[k.replace(/e?s$/,'')];if(u)return foodSmall(u);}
+  return null;};
 const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-104),y=Math.max(e.clientY-108,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
 if(hoverable){
   document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(!el)return;const src=foodSrc(el);if(!src)return;
-    if(foodImg.getAttribute('src')!==src){foodImg.src=src;foodEl.classList.toggle('cut',/\.png$/i.test(src));}foodMove(e);foodEl.classList.add('on');});
+    if(foodImg.getAttribute('src')!==src)foodImg.src=src;foodMove(e);foodEl.classList.add('on');});
   document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
   document.addEventListener('mousemove',e=>{if(foodEl.classList.contains('on'))foodMove(e);});
   addEventListener('hashchange',()=>foodEl.classList.remove('on'));
