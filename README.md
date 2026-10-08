@@ -159,11 +159,14 @@ map coordinates are set in /admin because the Airtable table has no columns for 
 Airtable are unpublished, not deleted. Content edits reach the live site within ~15 minutes — no redeploy.
 
 ## Food pill images
-Hovering a food (pills; "Known for" / "In season" rows) shows a 100×100 image by the cursor.
-1. **Your images (preferred):** the Dropbox folder in the `FOODS_DROPBOX_LINK` secret. Name each file after the food —
-   English (`Sumo citrus.png`), Japanese (`デコポン.png`) or the old romaji (`Dekopon.png`); capitals, spaces, accents and
-   plurals don't matter. The hourly sync copies them at 256px (PNG keeps transparency) to `producer_images/_foods/` and
-   lists them in the public `food_images` table, which `/api/data` returns as `window.FOOD_DROPBOX`. Files in other
-   formats (.svg, .psd, .ai…) are reported in `dropbox_sync_runs.issues`.
-2. **Placeholders:** foods without one of your images fall back to the public-domain photos in `assets/foods/`
-   (`foods.js`, sources in `CREDITS.md`). `FOOD_ALIAS` in `foods.js` lists previous romaji names for matching.
+Hovering a food (pills; "Known for" / "In season" rows) shows your transparent image, 100×100, by the cursor — nothing
+behind it. Images come **only** from the Dropbox folder in the `FOODS_DROPBOX_LINK` secret; foods without one show nothing.
+- Name each file after the food — English (`Sumo citrus.png`), Japanese (`デコポン.png`) or the old romaji
+  (`Dekopon.png`, see `FOOD_ALIAS` in `assets/foods/foods.js`); capitals, spaces, accents and plurals don't matter.
+- The hourly sync copies the files byte-for-byte (transparency intact; Dropbox's thumbnail service is not used because
+  it flattens transparency onto white) to `producer_images/_foods/` and lists them in the public `food_images` table,
+  which `/api/data` returns as `window.FOOD_DROPBOX`. Unusable formats (.svg, .psd, .ai…) are listed in
+  `dropbox_sync_runs.issues`. Use PNG under 8 MB.
+- On the site they're served through Vercel image optimisation at 200px WebP (alpha kept, ~10–20 KB instead of ~1.5 MB),
+  allowed only for this project's public bucket (`images` in `vercel.json`).
+- `assets/foods/*.jpg|png` + `FOOD_IMG` are the old public-domain placeholders; no longer shown.
