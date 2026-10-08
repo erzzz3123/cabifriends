@@ -19,7 +19,7 @@
 <script src="/api/data"></script>
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
-<script src="/assets/foods/foods.js?v=2" async></script>
+<script src="/assets/foods/foods.js?v=3" async></script>
 <style>
 :root{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace;--font-mono:var(--font-mono-jp);--ink:var(--cf-black);--bone:var(--cf-bone);--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:40px}
 *{box-sizing:border-box}
@@ -418,8 +418,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .note{position:static}
  .ft{grid-template-columns:1fr}
 }
-/* Food pills: a small image floats by the cursor on hover (photos cropped square; transparent PNGs shown whole) */
-#food{position:fixed;left:0;top:0;width:96px;height:96px;pointer-events:none;z-index:45;opacity:0;transition:opacity .15s ease}
+/* Food pills / Known for / In season: a 100px image floats by the cursor on hover (photos cropped square; transparent PNGs shown whole) */
+#food{position:fixed;left:0;top:0;width:100px;height:100px;pointer-events:none;z-index:45;opacity:0;transition:opacity .15s ease}
 #food.on{opacity:1}
 #food img{width:100%;height:100%;object-fit:cover;border-radius:5px;display:block}
 #food.cut img{object-fit:contain;border-radius:0}
@@ -992,10 +992,16 @@ const markLong=()=>{const blocks=new Map();document.querySelectorAll('#root p,#r
 new MutationObserver(markLong).observe(document.getElementById('root'),{childList:true,subtree:true});
 /* Food pills → small transparent image by the cursor (window.FOOD_IMG from /assets/foods/foods.js; works for JA labels too) */
 const foodEl=$('#food'),foodImg=foodEl.querySelector('img');let jaToEn=null;
-const foodSrc=el=>{const F=window.FOOD_IMG;if(!F)return null;const t=el.dataset.food||[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+// Your Dropbox food images (window.FOOD_DROPBOX, from /api/data) win; bundled placeholders (FOOD_IMG) fill the gaps.
+// Dropbox file names may be the English name, the Japanese name or the old romaji — case, spacing, accents and plurals ignored.
+const fkey=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]+/g,'');
+let fdx=null;const fdIndex=()=>{if(fdx)return fdx;fdx={};Object.entries(window.FOOD_DROPBOX||{}).forEach(([n,u])=>{const k=fkey(n);fdx[k]=u;fdx[k.replace(/e?s$/,'')]=fdx[k.replace(/e?s$/,'')]||u;});return fdx;};
+const foodSrc=el=>{let t=el.dataset.food||[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
   if(!jaToEn){jaToEn={};Object.entries(window.JA_TERMS||{}).forEach(([en,ja])=>jaToEn[ja]=en);}
-  const f=F[t]||F[jaToEn[t]];return f?'/assets/foods/'+f:null;};
-const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-100),y=Math.max(e.clientY-104,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
+  const en=jaToEn[t]||t,names=[en,(window.JA_TERMS||{})[en],...((window.FOOD_ALIAS||{})[en]||[])].filter(Boolean),D=fdIndex();
+  for(const n of names){const k=fkey(n);const u=D[k]||D[k.replace(/e?s$/,'')];if(u)return u;}
+  const f=(window.FOOD_IMG||{})[en];return f?'/assets/foods/'+f:null;};
+const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-104),y=Math.max(e.clientY-108,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
 if(hoverable){
   document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(!el)return;const src=foodSrc(el);if(!src)return;
     if(foodImg.getAttribute('src')!==src){foodImg.src=src;foodEl.classList.toggle('cut',/\.png$/i.test(src));}foodMove(e);foodEl.classList.add('on');});

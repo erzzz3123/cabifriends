@@ -53,6 +53,19 @@ alter table dropbox_folders enable row level security;
 alter table dropbox_sync_runs enable row level security;
 revoke all on dropbox_images, dropbox_folders, dropbox_sync_runs from anon, authenticated;
 
+-- ---------- food hover images ----------
+-- Filled by dropbox-sync from the FOODS_DROPBOX_LINK folder: one row per image, named after its file ("Sumo citrus").
+-- The website matches food names (English, Japanese or old romaji) against these. Public read, server-only write.
+create table if not exists food_images (
+  name text primary key,
+  url text not null,
+  updated_at timestamptz not null default now()
+);
+alter table food_images enable row level security;
+drop policy if exists "Public can read food images" on food_images;
+create policy "Public can read food images" on food_images for select to anon, authenticated using (true);
+revoke insert, update, delete, truncate on food_images from anon, authenticated;
+
 -- ---------- Vault helpers (server only) ----------
 -- Lets Edge Functions store/read one Vault secret (the Dropbox refresh token) with the service-role key.
 -- Nobody else can execute them: not the public anon key, not signed-in users.

@@ -159,9 +159,11 @@ map coordinates are set in /admin because the Airtable table has no columns for 
 Airtable are unpublished, not deleted. Content edits reach the live site within ~15 minutes — no redeploy.
 
 ## Food pill images
-Hovering a food (pills in the map drawer, filters and profiles; "Known for" and "In season" rows on prefecture pages) shows a small photo by the cursor.
-Images live in `assets/foods/` and are listed in `assets/foods/foods.js` (`"Matcha": "matcha.jpg"`, keyed by the English
-name used in `data.js`; Japanese labels are matched automatically). The current set is 155 public-domain / CC0
-placeholder photos from Wikimedia Commons, each checked by eye — sources in `assets/foods/CREDITS.md`. Foods without an
-image simply show nothing. Rows/elements opt in with a `data-food="English name"` attribute. To add or replace one: put a 240px JPEG (or a transparent PNG, shown uncropped) in `assets/foods/`
-and add/update its line in `foods.js`.
+Hovering a food (pills; "Known for" / "In season" rows) shows a 100×100 image by the cursor.
+1. **Your images (preferred):** the Dropbox folder in the `FOODS_DROPBOX_LINK` secret. Name each file after the food —
+   English (`Sumo citrus.png`), Japanese (`デコポン.png`) or the old romaji (`Dekopon.png`); capitals, spaces, accents and
+   plurals don't matter. The hourly sync copies them at 256px (PNG keeps transparency) to `producer_images/_foods/` and
+   lists them in the public `food_images` table, which `/api/data` returns as `window.FOOD_DROPBOX`. Files in other
+   formats (.svg, .psd, .ai…) are reported in `dropbox_sync_runs.issues`.
+2. **Placeholders:** foods without one of your images fall back to the public-domain photos in `assets/foods/`
+   (`foods.js`, sources in `CREDITS.md`). `FOOD_ALIAS` in `foods.js` lists previous romaji names for matching.

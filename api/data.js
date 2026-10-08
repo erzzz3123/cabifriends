@@ -10,9 +10,10 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
   try {
     const sb = sbPublic();
-    const [{ data: friends, error: e1 }, { data: prefs, error: e2 }] = await Promise.all([
+    const [{ data: friends, error: e1 }, { data: prefs, error: e2 }, { data: foods }] = await Promise.all([
       sb.from('friends').select('*, friend_images(path, caption, position)').eq('published', true).order('no', { nullsFirst: false }).order('id'),
       sb.from('prefectures').select('*').order('id'),
+      sb.from('food_images').select('name, url'), // food hover images from the Dropbox food folder (optional)
     ]);
     if (e1 || e2) throw e1 || e2;
     if (prefs.length !== 47) throw new Error(`expected 47 prefectures, got ${prefs.length} — run supabase/seed.sql`);
@@ -30,7 +31,8 @@ export default async function handler(req, res) {
     const PREFS = prefs.map((p) => ({ slug: p.slug, name_en: p.name_en, name_ja: p.name_ja, region: p.region, description: p.description, specialties: p.specialties || [], seasonal_foods: p.seasonal_foods || [] }));
     // Short CDN cache so approvals show up within a minute; stale copies are served while it refreshes.
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
-    res.status(200).send('window.FRIENDS=' + JSON.stringify(FRIENDS) + ';window.PREFS=' + JSON.stringify(PREFS) + ';');
+    const FOOD_DROPBOX = Object.fromEntries((foods || []).map((f) => [f.name, f.url]));
+    res.status(200).send('window.FRIENDS=' + JSON.stringify(FRIENDS) + ';window.PREFS=' + JSON.stringify(PREFS) + ';window.FOOD_DROPBOX=' + JSON.stringify(FOOD_DROPBOX) + ';');
   } catch (err) {
     console.error(err);
     // Empty response → the page falls back to the bundled /data.js

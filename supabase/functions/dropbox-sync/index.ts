@@ -113,7 +113,8 @@ const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { sta
 async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; only: string | null }) {
   const started = Date.now();
   const timeUp = () => Date.now() - started > CFG.budgetMs;
-  const stats = { producers: 0, folders: 0, listed: 0, uploaded: 0, unchanged: 0, hidden: 0, restored: 0, deleted: 0, airtable_updates: 0, deferred: 0 };
+  const stats = { producers: 0, folders: 0, listed: 0, uploaded: 0, unchanged: 0, hidden: 0, restored: 0, deleted: 0, airtable_updates: 0, deferred: 0,
+    food_images: 0, food_uploaded: 0 };
   const issues: Issue[] = [];
   let status = 'ok';
   try {
@@ -125,6 +126,10 @@ async function sync(sb: SupabaseClient, runId: number, opts: { dryRun: boolean; 
       refreshToken = data as string;
     }
     await dropboxLogin();
+    if (!opts.only) {
+      try { await syncFoods(sb, { dryRun: opts.dryRun, stats, issues }); }
+      catch (e) { issues.push({ folder: 'foods', problem: `food images folder could not be read: ${msg(e)}` }); status = 'partial'; }
+    }
     let producers = (await airtableProducers()).filter((p) => !opts.only || p.id === opts.only);
     stats.producers = producers.length;
     const refs = await matchFolders(producers, issues);
@@ -248,6 +253,80 @@ async function syncProducer(sb: SupabaseClient, p: Producer, ref: Ref, o: {
     .map((r) => base + r.storage_path.split('/').map(encodeURIComponent).join('/'));
 }
 
+// ---------------------------------------------------------------- food hover images
+
+// FOODS_DROPBOX_LINK: a shared folder of food images named after the food ("Sumo citrus.png", "デコポン.png").
+// Each is copied at 256px (PNG/GIF/WebP keep transparency) to producer_images/_foods/ and listed in the public
+// `food_images` table as { name: file name without extension, url }. Same safety rules as producer folders.
+const FOODS = '_foods';
+const KEEPS_ALPHA = /\.(png|gif|webp)$/i;
+async function syncFoods(sb: SupabaseClient, o: { dryRun: boolean; stats: Record<string, number>; issues: Issue[] }) {
+  const link = Deno.env.get('FOODS_DROPBOX_LINK');
+  if (!link) return;
+  const ref = parseFolderUrl(link);
+  if (!ref) { o.issues.push({ folder: link, problem: 'FOODS_DROPBOX_LINK is not a Dropbox folder link' }); return; }
+  const files = (await listImages(ref)).filter((f) => !VIDEO.test(f.name));
+  // Report files in the folder that can't be used (e.g. .svg, .psd, .ai, .pdf) so they don't silently go missing.
+  const skipped = await listOtherFiles(ref);
+  if (skipped.length) o.issues.push({ folder: 'foods', problem: `${skipped.length} file(s) not in a usable image format (use PNG or JPG): ${skipped.slice(0, 40).join(', ')}${skipped.length > 40 ? ' …' : ''}` });
+  const { data, error } = await sb.from('dropbox_images').select('*').eq('airtable_record_id', FOODS);
+  if (error) throw error;
+  const rows = (data ?? []) as Row[];
+  const byFile = new Map(rows.map((r) => [r.dropbox_file_id, r]));
+  const live = rows.filter((r) => !r.missing_since).length;
+  if (files.length === 0 && live > 0) { o.issues.push({ folder: 'foods', problem: `food folder reads as empty; kept its ${live} images to be safe` }); return; }
+  const seen = new Set<string>();
+  for (const f of files) {
+    seen.add(f.id);
+    const row = byFile.get(f.id);
+    if (row && row.version === f.version) {
+      if (!o.dryRun && (row.missing_since || row.dropbox_path !== f.rel)) await sb.from('dropbox_images').update({ missing_since: null, dropbox_path: f.rel }).eq('id', row.id);
+      if (row) { row.missing_since = null; row.dropbox_path = f.rel; }
+      continue;
+    }
+    o.stats.food_uploaded++;
+    if (o.dryRun) continue;
+    const alpha = KEEPS_ALPHA.test(f.name);
+    const resource = ref.kind === 'link' ? { '.tag': 'link', url: ref.url, path: (ref.base ?? '') + f.rel } : { '.tag': 'path', path: ref.path + f.rel };
+    let bytes: Uint8Array;
+    try {
+      const r = await dbx('content', 'files/get_thumbnail_v2', { resource, format: { '.tag': alpha ? 'png' : 'jpeg' }, size: { '.tag': 'w256h256' }, mode: { '.tag': 'fitone_bestfit' } });
+      bytes = new Uint8Array(await r.arrayBuffer());
+    } catch (e) { o.issues.push({ folder: 'foods', problem: `skipped ${f.name}: ${msg(e)}` }); o.stats.food_uploaded--; continue; }
+    const ext = alpha ? 'png' : 'jpg';
+    const path = `${FOODS}/${slug(f.name.replace(/\.[^.]+$/, '')) || 'food'}-${await shortHash(f.id + ':' + f.version)}.${ext}`;
+    const { error: upErr } = await sb.storage.from(CFG.bucket).upload(path, bytes, { contentType: alpha ? 'image/png' : 'image/jpeg', upsert: true, cacheControl: '31536000' });
+    if (upErr) throw new Error(`upload ${path}: ${upErr.message}`);
+    const saved = { airtable_record_id: FOODS, dropbox_file_id: f.id, dropbox_path: f.rel, version: f.version, storage_path: path, bytes: bytes.byteLength, synced_at: new Date().toISOString(), missing_since: null };
+    const { error: dbErr } = await sb.from('dropbox_images').upsert(saved, { onConflict: 'airtable_record_id,dropbox_file_id' });
+    if (dbErr) throw dbErr;
+    if (row && row.storage_path !== path) await sb.storage.from(CFG.bucket).remove([row.storage_path]);
+    if (row) Object.assign(row, saved); else rows.push({ id: 0, ...saved });
+  }
+  // Deleted from Dropbox: hidden at once, removed from storage after DELETE_AFTER_DAYS.
+  const cutoff = Date.now() - CFG.deleteAfterDays * 86400e3;
+  for (const r of rows.filter((r) => r.id && !seen.has(r.dropbox_file_id))) {
+    if (o.dryRun) continue;
+    if (!r.missing_since) { r.missing_since = new Date().toISOString(); await sb.from('dropbox_images').update({ missing_since: r.missing_since }).eq('id', r.id); }
+    else if (Date.parse(r.missing_since) < cutoff) { await sb.storage.from(CFG.bucket).remove([r.storage_path]); await sb.from('dropbox_images').delete().eq('id', r.id); }
+  }
+  // Publish the current set to the public food_images table (name = file name without extension).
+  const base = `${env('SUPABASE_URL')}/storage/v1/object/public/${CFG.bucket}/`;
+  const want = new Map<string, string>();
+  for (const r of rows) {
+    if (r.missing_since || !seen.has(r.dropbox_file_id)) continue;
+    const name = r.dropbox_path.split('/').pop()!.replace(/\.[^.]+$/, '').normalize('NFC').trim();
+    want.set(name, base + r.storage_path.split('/').map(encodeURIComponent).join('/'));
+  }
+  o.stats.food_images = want.size;
+  if (o.dryRun) return;
+  const { data: cur } = await sb.from('food_images').select('name, url');
+  const stale = (cur ?? []).filter((c) => want.get(c.name) !== c.url).map((c) => c.name).filter((n) => !want.has(n));
+  if (stale.length) await sb.from('food_images').delete().in('name', stale);
+  const changed = [...want].filter(([n, u]) => !(cur ?? []).some((c) => c.name === n && c.url === u)).map(([name, url]) => ({ name, url, updated_at: new Date().toISOString() }));
+  if (changed.length) { const { error: e2 } = await sb.from('food_images').upsert(changed, { onConflict: 'name' }); if (e2) throw e2; }
+}
+
 // ---------------------------------------------------------------- matching producers ↔ folders
 
 async function matchFolders(producers: Producer[], issues: Issue[]): Promise<Map<string, Ref>> {
@@ -353,6 +432,21 @@ async function listImages(ref: Ref, rel = '', depth = 0): Promise<DbxFile[]> {
     else if (e['.tag'] === 'file' && IMAGE.test(e.name)) {
       out.push({ id: e.id || childRel.toLowerCase(), rel: childRel, name: e.name, size: e.size ?? 0, version: e.content_hash || e.rev || `${e.server_modified}:${e.size}` });
     }
+  }
+  return out;
+}
+
+// Files that listImages ignores (not an image/video type), for reporting. Same folder rules as listImages.
+async function listOtherFiles(ref: Ref, rel = '', depth = 0): Promise<string[]> {
+  const args = ref.kind === 'link' ? { path: (ref.base ?? '') + rel, shared_link: { url: ref.url } } : { path: ref.path + rel };
+  let page = await (await dbx('rpc', 'files/list_folder', { ...args, limit: 2000 })).json();
+  const entries = [...page.entries];
+  while (page.has_more) { page = await (await dbx('rpc', 'files/list_folder/continue', { cursor: page.cursor })).json(); entries.push(...page.entries); }
+  const out: string[] = [];
+  for (const e of entries) {
+    if (/^[_.]/.test(e.name)) continue;
+    if (e['.tag'] === 'folder' && depth < 3) out.push(...await listOtherFiles(ref, `${rel}/${e.name}`, depth + 1));
+    else if (e['.tag'] === 'file' && !IMAGE.test(e.name)) out.push(`${rel}/${e.name}`.replace(/^\//, ''));
   }
   return out;
 }
