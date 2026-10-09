@@ -31,7 +31,7 @@ const F = {
   descriptionJa: 'fldoMOX8OHpd9ANKN', // Description (JA)
   published: Deno.env.get('AIRTABLE_PUBLISHED_FIELD') ?? '',
 };
-const CRAFT_EN: Record<string, string> = { 調味料: 'Seasonings', 酒: 'Drinks' };
+const CRAFT_EN: Record<string, string> = { 調味料: 'Seasonings', 酒: 'Drinks', 草木: 'Botanicals' };
 const JP = /[぀-ヿ㐀-鿿]/;
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type' };
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json', ...CORS } });
