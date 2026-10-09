@@ -450,7 +450,7 @@ body.r-about>.ft{display:none}
     <a href="#/directory" data-r="directory" data-t="Directory" data-ja="一覧">Directory</a>
     <a href="#/map" data-r="map" data-t="Map" data-ja="地図">Map</a>
     <a href="#/about" data-r="about" data-t="About" data-ja="概要">About</a>
-    <a href="#/submit" data-r="submit" data-t="Submit a Producer" data-ja="生産者を紹介する">Submit a Producer</a>
+    <a href="#/submit" data-r="submit" data-t="Submit a Producer" data-ja="リストに載る">Submit a Producer</a>
     <span class="sep"></span>
     <a href="https://cabifoods.com" target="_blank" rel="noopener">Cabi Foods ↗</a>
   </nav>
@@ -858,8 +858,8 @@ function renderSubmit(params){
   <section class="form-wrap wrap">
     <div>
       
-      <h1>${T('Know someone we should meet?','会ってほしい人はいますか？')}</h1>
-      <p style="font-size:17px;max-width:52ch;margin:0 0 24px">${T('Producers, farmers, makers, restaurants, shops and anyone else involved in Japanese food culture. Tell us about yourself, or about someone you think we should visit.','生産者、農家、つくり手、飲食店、お店など、日本の食文化に関わるすべての方へ。ご自身のこと、または私たちが訪ねるべきだと思う方のことを教えてください。')}</p>
+      <h1>${T('Know someone we should meet?','リストに載りたいです')}</h1>
+      <p style="font-size:17px;max-width:52ch;margin:0 0 24px;text-transform:none">${T('Producers, farmers, makers, restaurants, shops and anyone else involved in Japanese food culture. Tell us about yourself, or about someone you think we should visit.','生産者、農家、つくり手、飲食店、お店など、日本の食文化に関わるすべての方へ。ご自身のこと、または私たちが訪ねるべきだと思う方のことを教えてください。')}</p>
       <div class="seg" id="who" style="margin-bottom:10px"><button type="button" class="on" data-w="self">${T('I’m the producer','自分がつくり手です')}</button><button type="button" data-w="other">${T('I’m recommending someone','誰かを推薦します')}</button></div>
       <form id="sf" class="fgrid" onsubmit="return A.submit(event)">
         <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Company<input name="company" tabindex="-1" autocomplete="off"></label></div>
@@ -901,7 +901,7 @@ function renderAbout(){
       <p>${T('It is personal rather than complete. Everyone here is someone we know, have visited, buy from or admire. The directory grows slowly, as we travel.','網羅的ではなく、個人的なものです。ここにいるのは皆、私たちが知っている、訪ねた、仕入れている、あるいは尊敬している人たちです。ディレクトリは旅とともに、少しずつ育っていきます。')}</p>
       <p>${T('Each of the 47 prefectures has a small food guide, including the ones where we don’t have Friends yet, so the map is useful for learning what grows and gets made where.','47都道府県それぞれに小さな食ガイドがあります。まだ友人がいない県も含めて、どこで何が育ち、何がつくられているかを知る地図として使えます。')}</p>
       <p>${T('Cabi &amp; Friends is part of Cabi Foods. It isn’t a shop, but many of the Friends here are behind what we make.','Cabi &amp; FriendsはCabi Foodsの一部です。お店ではありませんが、ここにいる友人の多くが、私たちのつくるものを支えています。')}</p>
-      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Submit a Producer','生産者を紹介する')}</a></div>
+      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Submit a Producer','リストに載る')}</a></div>
     </div>
   </section>`;
 }
