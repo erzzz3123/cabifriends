@@ -5,8 +5,8 @@
 // so an Airtable edit is live within ~15 minutes without redeploying anything.
 //
 // Reads fields by ID, so renaming Airtable columns is safe. Private columns (Email, Contact status…) are never requested.
-// Airtable owns: names, maker, prefecture, craft → makes/tags, website/Instagram, Feature # and Image URLs
-// (filled by dropbox-sync). Descriptions, coordinates and published are left as set in /admin unless
+// Airtable owns: names, maker, prefecture, craft → makes/tags, website/Instagram, Feature #, Description (EN/JA) and Image URLs
+// (filled by dropbox-sync). Coordinates and published are left as set in /admin unless
 // AIRTABLE_PUBLISHED_FIELD names a checkbox field. Rows whose name starts with a bracket — "(Placeholder) …" — are skipped.
 //
 // Auth: `Authorization: Bearer <SYNC_SECRET>` (cron, dropbox-sync) or a signed-in user listed in `admins`.
@@ -27,6 +27,8 @@ const F = {
   website: 'fld6B4C5eGyl3zVjG',    // Website
   feature: 'fldkJODLUgUUmhFnT',    // Feature #
   images: 'fldkPzHHAzwcXGHdu',     // Image URLs (one per line, written by dropbox-sync)
+  description: 'fldQv2LMvbe58illX',   // Description (one or two sentences, Cabi's voice)
+  descriptionJa: 'fldoMOX8OHpd9ANKN', // Description (JA)
   published: Deno.env.get('AIRTABLE_PUBLISHED_FIELD') ?? '',
 };
 const CRAFT_EN: Record<string, string> = { 調味料: 'Seasonings', 酒: 'Drinks' };
@@ -77,7 +79,7 @@ async function authorized(req: Request, sb: ReturnType<typeof createClient>): Pr
 }
 
 async function sync(sb: ReturnType<typeof createClient>) {
-  const fields = [F.name, F.maker, F.craft, F.prefecture, F.website, F.feature, F.images, F.published].filter(Boolean);
+  const fields = [F.name, F.maker, F.craft, F.prefecture, F.website, F.feature, F.images, F.description, F.descriptionJa, F.published].filter(Boolean);
   // deno-lint-ignore no-explicit-any
   let records: any[] = [], offset = '';
   do {
@@ -111,6 +113,8 @@ async function sync(sb: ReturnType<typeof createClient>) {
       airtable_id: rec.id, name_en: name.en, name_ja: name.ja, maker: String(f[F.maker] || '').trim() || null,
       website: insta ? null : site || null, instagram: insta,
       makes: crafts.map((c) => CRAFT_EN[c] || c).join(' · ') || null, tags: crafts.map((c) => CRAFT_EN[c] || c),
+      description: String(f[F.description] || '').trim() || null,
+      description_ja: String(f[F.descriptionJa] || '').trim() || null,
       source: 'airtable',
     };
     if (prefecture) row.prefecture = prefecture;

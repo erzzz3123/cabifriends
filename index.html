@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cabi &amp; Friends — People, places &amp; food we love across Japan</title>
+<title>Cabi &amp; Friends · People, places &amp; food we love across Japan</title>
 <link rel="stylesheet" href="/_ds/tokens/fonts.css">
 <link rel="stylesheet" href="/_ds/tokens/colors.css">
 <link rel="stylesheet" href="/_ds/tokens/typography.css">
@@ -19,7 +19,7 @@
 <script src="/api/data"></script>
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
-<script src="/assets/foods/foods.js?v=5" async></script>
+<script src="/assets/foods/foods.js?v=6" async></script>
 <style>
 :root{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace;--font-mono:var(--font-mono-jp);--ink:var(--cf-black);--bone:var(--cf-bone);--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:40px}
 *{box-sizing:border-box}
@@ -186,7 +186,7 @@ button{font:inherit;color:inherit}
 .dp.on>*{opacity:1}
 .dp.on>.dp-f.first{transition:none}
 .dp.out>*{opacity:0;transition:opacity .25s ease}
-.dp-h{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-size:13px;line-height:1.38;padding-bottom:4px}
+.dp-h{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-size:13px;line-height:1.38;padding-bottom:8px;position:sticky;top:0;z-index:3;background:#fff}
 .dp-h .a{display:flex;gap:18px;flex:none}
 .dp-im{display:block}
 .dp-im>img,.dp-im>video{width:100%;height:auto;display:block;margin:0 auto}
@@ -630,7 +630,7 @@ function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button 
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
   ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
-  <p class="dp-d">${esc(f.description)}</p>`;}
+  <p class="dp-d" style="text-transform:none">${esc(f.description)}</p>`;}
 function renderDirectory(list){
   mapBuilt=false;
   const kp=knownPrefs(knownTerms());
@@ -738,16 +738,15 @@ function renderPanel(list,kp){
     pn.innerHTML=`
      <div class="meta mute" style="display:flex;justify-content:space-between"><span>${T('Pref. ','No. ')}${String(p.id).padStart(2,'0')} · ${tr(p.region)}</span><button class="lnk meta" onclick="A.mapPref(null)">${T('Close ×','閉じる ×')}</button></div>
      <h2 style="margin-top:14px">${p.name_en}<span class="ja">${p.name_ja}</span></h2>
-     <p style="font-size:14px;margin:16px 0 0">${esc(p.description)}</p>
+     <p style="font-size:14px;margin:16px 0 0;text-transform:none">${esc(p.description)}</p>
+     <div class="ctas" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:18px"><a class="btn" href="#/pref/${p.slug}">${T(p.name_en+' food guide →',p.name_en+'の食ガイド →')}</a>${fr.length?'':`<a class="ui" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a>`}</div>
      <div class="plbl meta"><span>${T('Known for','名産')}</span></div>
      <div class="known-list">${p.specialties.map(s=>`<button class="tag" onclick="A.term('${esc(s)}')">${esc(s)}</button>`).join('')}</div>
      <div class="plbl meta"><span>${T('In season','旬')}</span></div>
      <div class="season">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<span class="meta mute" style="padding-top:2px">${s}</span><span data-food="${esc(p._seas[i])}">${esc(p.seasonal_foods[i])}</span>`).join('')}</div>
-     <div class="plbl meta"><span>${T('Cabi’s Friends in '+p.name_en,p.name_en+'のCabiの友人')}</span><span>${String(fr.length).padStart(2,'0')}</span></div>
-     ${fr.length?fr.map(miniRow).join(''):`<p style="font-size:14px;margin:0 0 8px">${T('No Friends here yet. The map fills in as we meet people.','ここにはまだ友人がいません。出会いが増えるほど、地図は豊かになっていきます。')}</p><a class="ui" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a>`}
+     ${fr.length?`<div class="plbl meta"><span>${T('Cabi’s Friends in '+p.name_en,p.name_en+'のCabiの友人')}</span><span>${String(fr.length).padStart(2,'0')}</span></div>${fr.map(miniRow).join('')}`:''}
      <div class="plbl meta"><span>${T('Nearby','近隣')}</span></div>
-     <div class="known-list">${(p.neighbors||[]).map(s=>`<button class="tag" onclick="A.mapPref('${s}')">${P[s].name_en}</button>`).join('')}</div>
-     <div style="margin-top:24px"><a class="btn" href="#/pref/${p.slug}">${T(p.name_en+' food guide →',p.name_en+'の食ガイド →')}</a></div>`;
+     <div class="known-list">${(p.neighbors||[]).map(s=>`<button class="tag" onclick="A.mapPref('${s}')">${P[s].name_en}</button>`).join('')}</div>`;
     return;
   }
   const terms=knownTerms();
@@ -789,7 +788,7 @@ function renderFriend(slug){
         ${f.website?`<dt>${T('Website:','ウェブサイト：')}</dt><dd><a href="https://${esc(f.website)}" target="_blank" rel="noopener">${esc(f.website)} ↗</a></dd>`:''}
         ${f.instagram?`<dt>Instagram:</dt><dd><a href="https://instagram.com/${esc(f.instagram.slice(1))}" target="_blank" rel="noopener">${esc(f.instagram)} ↗</a></dd>`:''}
       </dl></div>
-      ${f.description||f.story.length?`<div class="fp-sec"><h2>${T('Description','紹介')}</h2><p>${esc(f.description)}</p>${f.story.map(s=>`<p>${esc(s)}</p>`).join('')}</div>`:''}
+      ${f.description||f.story.length?`<div class="fp-sec"><h2>${T('Description','紹介')}</h2><p style="text-transform:none">${esc(f.description)}</p>${f.story.map(s=>`<p style="text-transform:none">${esc(s)}</p>`).join('')}</div>`:''}
       ${f.relationship_to_cabi?`<div class="fp-sec"><h2>${T('Why they’re a Cabi Friend','Cabiの友人である理由')}</h2><p>${esc(f.relationship_to_cabi)}</p></div>`:''}
       ${f.specialties.length||f.ingredients.length||f.methods.length?`<div class="fp-sec"><h2>${T('Craft','つくり')}</h2><dl class="kv">
         <dt>${T('Specialties:','得意なもの：')}</dt><dd>${f.specialties.map(esc).join('<br>')}</dd>
@@ -827,7 +826,7 @@ function renderPref(slug){
     <div>
       <div class="meta mute" style="margin-bottom:18px">${T('Pref. '+String(p.id).padStart(2,'0')+' of 47','47都道府県中 '+String(p.id).padStart(2,'0'))} · ${tr(p.region)} · ${p.coordinates?coord(p.coordinates[0],p.coordinates[1]):''} · ${fc(fr.length)}</div>
       <h1>${p.name_en}<span class="ja">${p.name_ja}</span></h1>
-      <p class="desc">${esc(p.description)}</p>
+      <p class="desc" style="text-transform:none">${esc(p.description)}</p>${fr.length?'':`<div style="margin-top:22px"><a class="btn ghost" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a></div>`}
     </div>
     <div><a href="#/map/${p.slug}" class="locator" style="display:block">${miniMap(380,380,{hl:p.slug,pts:fr})}</a><div class="meta mute" style="margin-top:8px;display:flex;justify-content:space-between"><span>${T(p.name_en+' in Japan','日本の中の'+p.name_en)}</span><a href="#/map/${p.slug}">${T('Open map →','地図を開く →')}</a></div></div>
   </section>
@@ -837,10 +836,10 @@ function renderPref(slug){
     <div><div class="h3"><h3>${T('In season','旬')}</h3><span class="meta mute">旬</span></div>
       <div class="seasons">${T(['Spring','Summer','Autumn','Winter'],['春','夏','秋','冬']).map((s,i)=>`<div data-food="${esc(p._seas[i])}"><span class="meta mute" style="padding-top:5px">${s}</span><span>${esc(p.seasonal_foods[i])}</span></div>`).join('')}</div></div>
   </section>
-  <section class="block wrap">
+  ${fr.length?`<section class="block wrap">
     <div class="h3"><h3>${T('Cabi’s Friends in '+p.name_en,p.name_en+'のCabiの友人')}</h3><span class="meta mute">${String(fr.length).padStart(2,'0')}</span></div>
-    <div style="border-top:1px solid var(--ink)">${fr.length?fr.map(miniRow).join(''):`<div class="empty" style="padding:32px 0"><p>${T('No Friends in '+p.name_en+' yet. This guide will grow as we meet people here.',p.name_en+'にはまだ友人がいません。出会いとともに、このガイドは育っていきます。')}</p><a class="btn ghost" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a></div>`}</div>
-  </section>
+    <div style="border-top:1px solid var(--ink)">${fr.map(miniRow).join('')}</div>
+  </section>`:''}
   <section class="block wrap">
     <div class="h3"><h3>${T('Explore nearby','近くを巡る')}</h3><span class="meta mute">${T('Bordering prefectures','隣接する都道府県')}</span></div>
     <div class="near">${(p.neighbors||[]).map(s=>{const o=P[s];return `<a href="#/pref/${s}"><span class="t">${o.name_en} <span style="text-transform:none;font-weight:300">${o.name_ja}</span></span><span class="s">${o.specialties.slice(0,4).join(' · ')}</span><span class="meta mute">${o.friends.length?fc(o.friends.length):'—'}</span></a>`;}).join('')}</div>
@@ -866,7 +865,7 @@ function renderSubmit(params){
         <div class="fld"><label>${T('Category','種類')}</label><select name="category">${['Producer','Farmer','Craft / Maker','Restaurant','Shop','Other'].map(c=>`<option value="${c}">${tr(c)}</option>`).join('')}</select></div>
         <div class="fld"><label>${T('Location','所在地')}</label><input name="city" placeholder="${T('Town or city','市区町村')}"></div>
         <div class="fld"><label>${T('Prefecture','都道府県')}</label><select name="pref" required><option value="">${T('Select…','選択…')}</option>${REGIONS.map(r=>`<optgroup label="${tr(r)}">${PREFS.filter(p=>p.region===r).map(p=>`<option value="${p.slug}" ${p.slug===pre?'selected':''}>${p.name_en} ${p.name_ja}</option>`).join('')}</optgroup>`).join('')}</select></div>
-        <div class="fld full"><label>${T('What they make','つくっているもの')}</label><input name="makes" placeholder="${T('e.g. Barrel-aged soy sauce','例：木桶仕込みの醤油')}"></div>
+        <div class="fld full"><label>${T('What they make','つくっているもの')}</label><input name="makes" placeholder="${T('e.g. Soy sauce aged in wooden barrels','例：木桶仕込みの醤油')}"></div>
         <div class="fld full"><label>${T('Their story','ストーリー')}</label><textarea name="story" placeholder="${T('How they work, what makes it special, how you know them.','仕事のやり方、その特別さ、どのように知り合ったか。')}"></textarea></div>
         <div class="fld"><label>${T('Website','ウェブサイト')}</label><input name="website" placeholder="https://"></div>
         <div class="fld"><label>Instagram</label><input name="instagram" placeholder="@"></div>
