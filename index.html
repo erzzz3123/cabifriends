@@ -19,7 +19,7 @@
 <script src="/api/data"></script>
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
-<script src="/assets/foods/foods.js?v=3" async></script>
+<script src="/assets/foods/foods.js?v=4" async></script>
 <style>
 :root{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace;--font-mono:var(--font-mono-jp);--ink:var(--cf-black);--bone:var(--cf-bone);--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:40px}
 *{box-sizing:border-box}
@@ -471,7 +471,12 @@ const $=s=>document.querySelector(s);
 const app=$('#root');
 const isVid=s=>/\.(mp4|m4v|webm|mov)(\?|#|$)/i.test(s||'');
 // Videos sit in the same slots as photos: large views loop silently like a moving photo, small ones show the first frame.
-const media=(src,alt='',play=false)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${src}" alt="${alt}">`;
+// Photos are served by Vercel at the size they're shown (WebP, transparency kept); not on localhost. Falls back to the original.
+const LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const opt=(src,w)=>{if(!src||LOCAL||isVid(src))return src;const u=src.startsWith('assets/')?'/'+src:src;
+  return /^(\/assets\/|https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\/)/.test(u)?'/_vercel/image?url='+encodeURIComponent(u)+'&w='+w+'&q=78':src;};
+document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=decodeURIComponent(m[1]);},true);
+const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={}; PREFS.forEach((p,i)=>{p.id=i+1;P[p.slug]=p;p.friends=[];p._en=p.name_en;p._ja=p.name_ja;p._desc=p.description;p._spec=p.specialties;p._seas=p.seasonal_foods;});
 window.FRIENDS=FRIENDS.filter(f=>f&&f.slug&&P[f.prefecture]);FRIENDS.forEach(f=>{['images','tags','specialties','ingredients','methods'].forEach(k=>{if(!Array.isArray(f[k]))f[k]=[];});if(!Array.isArray(f.story))f.story=f.story?[f.story]:[];if(!Array.isArray(f.story_ja))f.story_ja=f.story_ja?[f.story_ja]:[];});
@@ -621,7 +626,7 @@ const SORTS={no:'No. 1 →',shuffle:'Random',new:'Recently added',az:'A–Z',ns:
 const SORTS_JA={no:'番号順',shuffle:'ランダム',new:'新着順',az:'名前順',ns:'北から南へ'};
 const RAT=['4/5','3/2','1/1'],TONE=['rgba(67,47,41,.30)','rgba(67,47,41,.16)','rgba(67,47,41,.42)'];
 const desk=()=>matchMedia('(min-width:761px)').matches;
-function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
+function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src,'',false,384):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
   ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
@@ -646,7 +651,7 @@ function renderDirectory(list){
    </div>`;}).join('');
   const cards=list.map(f=>{const p=P[f.prefecture],im=f.images[0];return `
    <article class="card" data-slug="${f.slug}" onclick="A.friend('${f.slug}')">
-     <div class="thumb"><span class="no">${f.no}</span>${im.src?media(im.src,esc(im.caption)):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
+     <div class="thumb"><span class="no">${f.no}</span>${im.src?media(im.src,esc(im.caption),false,828):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
        <div class="hv"><span class="meta" style="opacity:.8">${p.name_ja} · ${coord(f.latitude,f.longitude)}</span><span>${esc(f.makes)}</span></div></div>
      <h2><span class="en">${esc(f.name_en)}</span><span class="ja">${f.name_ja}</span></h2>
      <ul class="ct"><li><button class="pf" onclick="event.stopPropagation();A.tag('place:${p.slug}')">${p.name_en}</button></li>${[f.category,...f.tags].map((t,i)=>`<li><button onclick="event.stopPropagation();A.tag('${i?'food:':'type:'}${esc(t)}')">${esc(tr(t))}</button></li>`).join('')}</ul>
@@ -674,7 +679,7 @@ function applyPreview(){
 /* hover photo */
 const peek=$('#peek');
 function peekShow(e,slug){if(!hoverable)return;const f=F[slug];const img=f.images[0];
-  peek.innerHTML=(img.src?media(img.src):`<div class="ph"><span class="x">${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(img.caption)}</span></div>`)+`<div class="cap">${esc(img.caption)}</div>`;
+  peek.innerHTML=(img.src?media(img.src,'',false,828):`<div class="ph"><span class="x">${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(img.caption)}</span></div>`)+`<div class="cap">${esc(img.caption)}</div>`;
   peek.style.display='block';peekMove(e);}
 function peekMove(e){if(peek.style.display!=='block')return;const w=232,h=peek.offsetHeight||300;let x=e.clientX+24,y=e.clientY-h/2;if(x+w>innerWidth-10)x=e.clientX-w-24;y=Math.max(10,Math.min(innerHeight-h-10,y));peek.style.transform=`translate(${x}px,${y}px)`;}
 
@@ -720,7 +725,7 @@ function buildMap(){
     .style('opacity',0)
     .each(function(f){const el=this;setTimeout(()=>{el.style.opacity=1;},250+dOrder.indexOf(f.slug)*90);})
     .attr('transform',f=>{const [x,y]=projFor(pr,f.prefecture)([f.longitude,f.latitude]);return `translate(${x},${y})`;})
-    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?media(im.src):`<span></span>`).join('')}</div>`))
+    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?media(im.src,'',false,384):`<span></span>`).join('')}</div>`))
     .on('mousemove',tipMove).on('mouseleave',tipHide)
     .on('click',(e,f)=>{tipHide();A.friend(f.slug);});
   dots.append('circle');
@@ -1000,11 +1005,15 @@ const foodSmall=u=>/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?u:'/_ver
 foodImg.addEventListener('error',()=>{const m=(foodImg.getAttribute('src')||'').match(/[?&]url=([^&]+)/);if(m)foodImg.src=decodeURIComponent(m[1]);});
 const foodSrc=el=>{let t=el.dataset.food||[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
   if(!jaToEn){jaToEn={};Object.entries(window.JA_TERMS||{}).forEach(([en,ja])=>jaToEn[ja]=en);}
-  const en=jaToEn[t]||t,names=[en,(window.JA_TERMS||{})[en],...((window.FOOD_ALIAS||{})[en]||[])].filter(Boolean),D=fdIndex();
+  const en=jaToEn[t]||t,names=[en,...en.split(' / '),(window.JA_TERMS||{})[en],...((window.FOOD_ALIAS||{})[en]||[])].filter(Boolean),D=fdIndex();
   for(const n of names){const k=fkey(n);const u=D[k]||D[k.replace(/e?s$/,'')];if(u)return foodSmall(u);}
   return null;};
 const foodMove=e=>{const x=Math.min(e.clientX+16,innerWidth-104),y=Math.max(e.clientY-108,4);foodEl.style.transform=`translate(${x}px,${y}px)`;};
+const foodWarm=new Set();let foodWarmT;
+const warmFoods=()=>{clearTimeout(foodWarmT);foodWarmT=setTimeout(()=>{if(!window.FOOD_DROPBOX)return;
+  document.querySelectorAll('#root .tag,#root [data-food]').forEach(el=>{const u=foodSrc(el);if(u&&!foodWarm.has(u)&&foodWarm.size<400){foodWarm.add(u);const i=new Image();i.decoding='async';i.src=u;}});},400);};
 if(hoverable){
+  new MutationObserver(warmFoods).observe(document.getElementById('root'),{childList:true,subtree:true});
   document.addEventListener('mouseover',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(!el)return;const src=foodSrc(el);if(!src)return;
     if(foodImg.getAttribute('src')!==src)foodImg.src=src;foodMove(e);foodEl.classList.add('on');});
   document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
