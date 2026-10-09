@@ -20,6 +20,17 @@
 <script src="/i18n.js"></script>
 <script src="/assets/japan-topo.js"></script>
 <script src="/assets/foods/foods.js?v=7"></script>
+<!-- Japanese font: Momochidori Wide via Adobe Fonts web project (Latin stays Ginto) -->
+<script>
+  (function(d) {
+    var config = {
+      kitId: 'wuk0san',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+</script>
 <style>
 :root{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace;--font-mono:var(--font-mono-jp);--ink:var(--cf-black);--bone:var(--cf-bone);--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:40px}
 *{box-sizing:border-box}
@@ -28,7 +39,7 @@ body>.util,body>.hd,body>#root,body>.ft{zoom:.9}
 html:root,html [data-theme="friends"],body[data-theme="friends"]{--bone:#FFFFFF;--cf-bone:#FFFFFF}
 button,input,select,textarea{font-family:inherit;text-transform:inherit;letter-spacing:inherit}
 @font-face{font-family:"Ginto Local";src:url("/fonts/Ginto-Light.ttf") format("truetype");font-weight:100 900;font-display:swap}
-[data-theme="friends"]{--font-mono-jp:"Ginto Local","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;--font-mono:var(--font-mono-jp);--bone:#fff}
+[data-theme="friends"]{--font-mono-jp:"Ginto Local","momochidori-wide","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;--font-mono:var(--font-mono-jp);--bone:#fff}
 [data-theme="friends-old"]{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace}
 body{background:#fff;color:var(--ink);font-family:var(--font-mono-jp);font-weight:300;text-transform:uppercase;letter-spacing:.02em;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--ink);text-decoration:none}

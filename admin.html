@@ -11,12 +11,23 @@
 <script src="/i18n.js"></script>
 <script src="/api/config"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- Japanese font: Momochidori Wide via Adobe Fonts web project (Latin stays Ginto) -->
+<script>
+  (function(d) {
+    var config = {
+      kitId: 'wuk0san',
+      scriptTimeout: 3000,
+      async: true
+    },
+    h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+  })(document);
+</script>
 <style>
 @font-face{font-family:"Ginto Local";src:url("/fonts/Ginto-Light.ttf") format("truetype");font-weight:100 900;font-display:swap}
 :root{--ink:var(--cf-black);--bone:#fff;--soft:var(--cf-rule-soft);--hov:var(--cf-hover);--mute:rgba(67,47,41,.74);--pad:36px}
 *{box-sizing:border-box}
 html,body{margin:0;background:#fff}
-body{color:var(--ink);font-family:"Ginto Local","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;font-weight:300;text-transform:uppercase;letter-spacing:.02em;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{color:var(--ink);font-family:"Ginto Local","momochidori-wide","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;font-weight:300;text-transform:uppercase;letter-spacing:.02em;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--ink);text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 ::selection{background:var(--ink);color:var(--bone)}
 html:root,html [data-theme="friends"],body[data-theme="friends"]{--bone:#FFFFFF;--cf-bone:#FFFFFF;background:#fff}
