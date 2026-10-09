@@ -40,8 +40,10 @@ html:root,html [data-theme="friends"],body[data-theme="friends"]{--bone:#FFFFFF;
 button,input,select,textarea{font-family:inherit;text-transform:inherit;letter-spacing:inherit}
 @font-face{font-family:"Ginto Local";src:url("/fonts/Ginto-Light.ttf") format("truetype");font-weight:100 900;font-display:swap}
 [data-theme="friends"]{--font-mono-jp:"Ginto Local","momochidori","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;--font-mono:var(--font-mono-jp);--bone:#fff}
-/* Momochidori at 400 for Japanese (Ginto Light looks the same at any weight) */
-html[lang="ja"] body,html[lang="ja"] body *{font-weight:400!important}
+/* Japanese glyphs use Momochidori: 500 when Japanese is the page language, 200 when it sits beside English.
+   Ginto Light is one file for every weight, so Latin text looks the same either way. */
+html[lang="ja"] body,html[lang="ja"] body *{font-weight:500!important}
+html:not([lang="ja"]) body,html:not([lang="ja"]) body *{font-weight:200!important}
 [data-theme="friends-old"]{--font-mono-jp:"FT Blank Mono","DM Mono",ui-monospace,Menlo,"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",monospace}
 body{background:#fff;color:var(--ink);font-family:var(--font-mono-jp);font-weight:300;text-transform:uppercase;letter-spacing:.02em;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--ink);text-decoration:none}
