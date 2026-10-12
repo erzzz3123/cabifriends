@@ -374,6 +374,15 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 /* forms */
 .form-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:64px;padding-top:40px;padding-bottom:72px}
 .form-wrap h1{margin:0 0 12px;font-weight:300;font-size:56px;line-height:1.05}
+/* Get in touch: two sides, visitors on the left, producers on the right */
+.gt-wrap{padding-top:40px}
+.gt-h{margin:0 0 28px;font-weight:300;font-size:56px;line-height:1.05}
+.gt{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.gt>div{padding:28px 40px 36px 0;display:flex;flex-direction:column;align-items:flex-start}
+.gt>div+div{border-left:1px solid var(--ink);padding-left:40px;padding-right:0}
+.gt h2{font-weight:300;font-size:34px;line-height:1.1;margin:10px 0 14px}
+.gt p{font-size:16px;line-height:1.55;max-width:44ch;margin:0 0 24px;text-transform:none;flex:1}
+.ap-h{margin:0 0 18px;font-weight:300;font-size:34px;line-height:1.1}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .fld{display:grid;gap:6px;padding:14px 0;border-bottom:1px solid var(--soft)}
 .fld.full{grid-column:1/-1}
@@ -496,7 +505,11 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .ft .links{grid-area:shop;justify-self:end}
  .ft .ft-by{grid-area:by;justify-self:center;text-align:center}
  .fgrid{grid-template-columns:1fr}
- .form-wrap h1,.about h1{font-size:38px}
+ .form-wrap h1,.about h1,.gt-h{font-size:38px}
+ .gt{grid-template-columns:1fr}
+ .gt>div{padding:24px 0 28px}
+ .gt>div+div{border-left:0;border-top:1px solid var(--ink);padding-left:0}
+ .gt h2,.ap-h{font-size:28px}
  .note{position:static}
  .ft{grid-template-columns:1fr}
 }
@@ -571,7 +584,7 @@ body.r-about>.ft{display:none}
     <a href="#/directory" data-r="directory" data-t="Directory" data-ja="一覧">Directory</a>
     <a href="#/map" data-r="map" data-t="Map" data-ja="地図">Map</a>
     <a href="#/about" data-r="about" data-t="About" data-ja="概要">About</a>
-    <a href="#/submit" data-r="submit" data-t="Get featured" data-ja="掲載の相談">Get featured</a>
+    <a href="#/submit" data-r="submit" data-t="Get in touch" data-ja="お問い合わせ">Get in touch</a>
     <span class="sep"></span>
     <a href="https://cabifoods.com" target="_blank" rel="noopener">Cabi Foods ↗</a>
   </nav>
@@ -826,7 +839,7 @@ function renderDirectory(list){
   const also=kp.length?`<div class="also"><div class="meta">${T('Prefectures known for','名産として知られる都道府県')}<br><span style="text-transform:none;font-size:13px;letter-spacing:0">“${esc(terms.join(' + '))}”</span></div><div class="pl2">${kp.map(({p,hit})=>`<a href="#/pref/${p.slug}">${p.name_en} ${p.name_ja} <span class="mute">— ${esc(hit)}</span></a>`).join('')}</div></div>`:'';
   $('#results').innerHTML=`<div class="wrap">
     ${state.layout==='grid'?(list.length?`<div class="grid">${cards}</div>`:''):(list.length?`<div class="dl-wrap"><div class="dl${state.open&&list.some(f=>f.slug===state.open)?' has-sel':''}" id="dl" onclick="if(event.target===this||event.target.classList.contains('dl-grid'))A.closeFig()"><div class="dl-grid">${ents}</div></div><aside class="dp" id="dp"></aside></div>`:'')}
-    ${list.length?'':`<div class="empty"><p>${T('No Friends match that yet','該当する友人はまだいません')}${kp.length?T(', but these prefectures are known for it.','。以下の都道府県の名産です。'):T('.','。')}</p><div class="ctrls"><button class="btn ghost" onclick="A.clearAll()">${T('Clear filters','絞り込みをクリア')}</button><a class="btn ghost" href="#/submit">${T('Know someone? Submit a Producer','心当たりがあれば紹介する')}</a></div></div>`}
+    ${list.length?'':`<div class="empty"><p>${T('No Friends match that yet','該当する友人はまだいません')}${kp.length?T(', but these prefectures are known for it.','。以下の都道府県の名産です。'):T('.','。')}</p><div class="ctrls"><button class="btn ghost" onclick="A.clearAll()">${T('Clear filters','絞り込みをクリア')}</button><a class="btn ghost" href="#/submit">${T('Know someone? Get in touch','心当たりがあれば、お問い合わせへ')}</a></div></div>`}
     ${also}
     <div style="height:48px"></div></div>`;
   if(state.layout==='list'&&state.open&&F[state.open]&&list.includes(F[state.open])&&desk()){const dp=$('#dp');dp.innerHTML=panelHTML(F[state.open],state.openI||0);dp.classList.add('on');}else if(state.layout==='list')state.open=null;
@@ -1017,11 +1030,27 @@ function renderPref(slug){
 function renderSubmit(params){
   const pre=params.get('pref')||'';
   app.innerHTML=`
-  <section class="form-wrap wrap">
+  <section class="wrap gt-wrap">
+    <h1 class="gt-h">${T('Get in touch','お問い合わせ')}</h1>
+    <div class="gt">
+      <div>
+        <span class="meta">${T('Visiting Japan','日本を訪れる方へ')}</span>
+        <h2>${T('Want to meet the makers?','つくり手に会いに行きたい方へ')}</h2>
+        <p>${T('Planning a trip and curious about the people behind the food? Tell us where you’re headed and what you’d love to taste, and we’ll point you to the right producers.','旅の計画中で、食の向こうにいる人に会ってみたい方へ。行き先や味わってみたいものを教えていただければ、ぴったりのつくり手をご紹介します。')}</p>
+        <a class="btn" href="mailto:hi@cabifoods.com">hi@cabifoods.com</a>
+      </div>
+      <div>
+        <span class="meta">${T('Producers and makers','つくり手の方へ')}</span>
+        <h2>${T('Want to be listed?','掲載を希望する方へ')}</h2>
+        <p>${T('Producers, farmers, makers and anyone else involved in Japanese food culture. Tell us about yourself, or about someone you think we should visit.','生産者、農家、つくり手、日本の食文化に関わるすべての方へ。ご自身のこと、または私たちが訪ねるべき方のことを教えてください。')}</p>
+        <a class="btn ghost" href="#/submit" onclick="event.preventDefault();document.getElementById('apply').scrollIntoView({behavior:'smooth'})">${T('Apply below ↓','下のフォームから応募 ↓')}</a>
+      </div>
+    </div>
+  </section>
+  <section class="form-wrap wrap" id="apply">
     <div>
+      <h2 class="ap-h">${T('Apply to Cabi &amp; Friends','掲載のお申し込み')}</h2>
       
-      <h1>${T('Know someone we should meet?','Cabi &amp; Friendsになりたい方へ')}</h1>
-      <p style="font-size:17px;max-width:52ch;margin:0 0 24px;text-transform:none">${T('Producers, farmers, makers and anyone else involved in Japanese food culture. Tell us about yourself, or about someone you think we should visit.','生産者、農家、つくり手、日本の食文化に関わるすべての方へ。ご自身のこと、または私たちが訪ねるべきだと思う方のことを教えてください。')}</p>
       <div class="seg" id="who" style="margin-bottom:10px"><button type="button" class="on" data-w="self">${T('I’m the producer','自分がつくり手です')}</button><button type="button" data-w="other">${T('I’m recommending someone','誰かを推薦します')}</button></div>
       <form id="sf" class="fgrid" onsubmit="return A.submit(event)">
         <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Company<input name="company" tabindex="-1" autocomplete="off"></label></div>
@@ -1072,7 +1101,7 @@ function renderAbout(){
         <div><div class="meta">${T('Food','食')}</div><p>${T('What grows, gets made and comes into season where, and who is behind it.','どこで何が育ち、つくられ、旬を迎えるのか。そして、その向こうにいる人。')}</p></div>
       </div>
       <p style="margin-top:28px;text-transform:none;letter-spacing:-.01em">${T('The network grows as we travel. Cabi &amp; Friends is part of Cabi Foods, and many of the people here are behind what we make.','このつながりは、旅とともに広がっていきます。Cabi &amp; FriendsはCabi Foodsの一部で、ここにいる多くの人が、私たちのつくるものを支えています。')}</p>
-      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Get featured','掲載の相談')}</a></div>
+      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Get in touch','お問い合わせ')}</a></div>
     </div>
   </section>`;
 }
