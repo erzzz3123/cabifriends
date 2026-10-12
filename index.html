@@ -172,6 +172,8 @@ button{font:inherit;color:inherit}
 .ex-row.nob{border-bottom:0}
 .ex-ctl{display:flex;gap:12px 32px;flex-wrap:wrap;align-items:center}
 .ex-ctl>span{display:flex;gap:18px}
+.fpanel{display:contents}
+.fp-hd,.fp-tags,.ficon,.fscrim{display:none}
 .bk{background:none;border:0;padding:0;cursor:pointer;font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:400;white-space:nowrap}
 .bk::before{content:"[ ] ";white-space:pre}
 .bk.on::before{content:"[•] "}
@@ -438,8 +440,25 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .seasons div{grid-template-columns:90px minmax(0,1fr) 45px;align-items:center}
  .seasons .simg{display:flex;height:45px;width:45px;align-items:center;justify-content:flex-end}
  .seasons .simg img{max-height:100%;max-width:100%;object-fit:contain;display:block}
- .tag:has(.pimg){display:inline-flex;align-items:center;gap:6px;padding-top:13px;padding-bottom:13px}
+ .tag:has(.pimg){display:inline-flex;align-items:center;gap:6px;padding:10px 14px}
  .tag .pimg{display:block;width:39px;height:39px;object-fit:contain;margin:0}
+ /* directory controls (sizes divided by .9 to undo the page zoom): a filter icon by the search opens a panel that fades and slides in from the right */
+ .ficon{display:flex;align-items:center;gap:4px;flex:none;background:none;border:0;padding:6px 0 6px 8px;cursor:pointer;color:var(--ink);font-size:11px;letter-spacing:.04em}
+ .ficon svg{width:22px;height:22px;display:block}
+ .fpanel{display:flex;flex-direction:column;gap:22px;position:fixed;top:0;right:0;height:calc(100dvh / .9);width:min(340px,88vw);z-index:60;background:#fff;border-left:1px solid var(--ink);padding:18px var(--pad) 40px;overflow-y:auto;opacity:0;transform:translateX(100%);visibility:hidden;transition:opacity .35s ease,transform .35s ease,visibility 0s linear .35s}
+ body.fopen .fpanel{opacity:1;transform:none;visibility:visible;transition:opacity .35s ease,transform .35s ease}
+ .fscrim{display:block;position:fixed;top:0;left:0;width:calc(100vw / .9);height:calc(100dvh / .9);z-index:59;background:rgba(255,255,255,.7);opacity:0;visibility:hidden;transition:opacity .35s ease,visibility 0s linear .35s}
+ body.fopen .fscrim{opacity:1;visibility:visible;transition:opacity .35s ease}
+ body.fopen{overflow:hidden}
+ .fp-hd{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--ink)}
+ .fpanel .ex-ctl{flex-direction:column;align-items:flex-start;gap:18px}
+ .fp-tags{display:block}
+ #ftoggle{display:none}
+ .fpanel #tags{display:block!important;margin-top:0!important}
+ .fpanel .tlist{flex-wrap:wrap;overflow:visible}
+ /* main nav: the current page gets a dot instead of an underline */
+ .nav a.on,.nav a:hover{border-bottom-color:transparent}
+ .nav a.on::before{content:"• "}
  /* header: let it grow so the nav under the logo isn't cut off */
  .hd{height:auto!important}
  .fgrid{grid-template-columns:1fr}
@@ -602,7 +621,10 @@ function mountExplore(){
       <div class="search">
         <input id="q" type="search" autocomplete="off" placeholder="${T('Search friends, places, ingredients…','友人、場所、食材を検索…')}" aria-label="Search" style="font-size: 12px; height: 35px">
         <button class="clr" id="qclr" style="display:none" onclick="A.clearQ()">${T('Clear','クリア')}</button>
+        <button class="ficon" id="ficon" onclick="A.fpanel(true)" aria-label="${T('Filter','絞り込み')}"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M2 5h16M5 10h10M8 15h4"/></svg><span id="ficn"></span></button>
       </div>
+      <div class="fpanel" id="fpanel">
+      <div class="fp-hd"><span class="meta">${T('Filter','絞り込み')}</span><button class="lnk ui" onclick="A.fpanel(false)">${T('Close ×','閉じる ×')}</button></div>
       <div class="ex-ctl">
         <span id="viewseg"><button class="bk" data-v="directory">${T('Directory','一覧')}</button><button class="bk" data-v="map">${T('Map','地図')}</button></span>
         <span id="layseg"><button class="bk" data-l="list">${T('List','リスト')}</button><button class="bk" data-l="grid">${T('Grid','グリッド')}</button></span>
@@ -610,8 +632,11 @@ function mountExplore(){
         <button class="bk plain" id="ftoggle" onclick="A.toggleFilters()"></button>
         <button class="bk plain" onclick="A.random()">${T('Random Friend ↝','ランダムな友人 ↝')}</button>
       </div>
+      <div class="fp-tags" id="fptags"></div>
+      </div>
     </div>
     <div class="tags" id="tags" style="margin-top:10px"></div>
+    <div class="fscrim" onclick="A.fpanel(false)"></div>
   </section>
   <section id="results"></section>`;
   const q=$('#q'); q.value=state.q;
@@ -620,9 +645,14 @@ function mountExplore(){
   $('#viewseg').addEventListener('click',e=>{const v=e.target.dataset.v;if(v)location.hash=v==='map'?'#/map'+(state.sel?'/'+state.sel:''):'#/directory';});
   $('#layseg').addEventListener('click',e=>{const l=e.target.dataset.l;if(l){state.layout=l;update();}});
   $('#sortseg').addEventListener('click',()=>{const k=Object.keys(SORTS);const s=k[(k.indexOf(state.sort)+1)%k.length];if(s==='shuffle')state.order=shuffle(state.order);state.sort=s;update();});
-  renderTags();
+  renderTags();placeTags();
   mapBuilt=false;
 }
+/* Phones: the filter rows live inside the slide-in panel; wider screens keep them under the search row */
+function placeTags(){const t=$('#tags'),box=$('#fptags');if(!t||!box)return;
+  if(desk()){if(t.parentNode===box)$('.ex-row').after(t);}else if(t.parentNode!==box)box.append(t);}
+matchMedia('(min-width:761px)').addEventListener('change',()=>{placeTags();if(desk())A.fpanel(false);});
+addEventListener('hashchange',()=>document.body.classList.remove('fopen'));
 function renderTags(){
   const btn=(k,label,n,extra='')=>`<button class="tag" data-tag="${k}" onclick="A.tag('${k}')" onmouseenter="A.pv('${k}')" onmouseleave="A.pv(null)">${label}${extra}<i>${n}</i></button>`;
   const cnt=k=>FRIENDS.filter(f=>hasTag(f,k)).length;
@@ -646,6 +676,7 @@ function update(){
   $('#sortbtn').textContent=T('Sort: ','並び替え：')+T(SORTS[state.sort],SORTS_JA[state.sort]);
   $('#ftoggle').textContent=(state.showFilters?T('Hide filters','絞り込みを閉じる'):T('Filter','絞り込み'))+(state.tags.size?` (${state.tags.size})`:'');
   $('#tags').style.display=state.showFilters?'':'none';
+  $('#ficn').textContent=state.tags.size?state.tags.size:'';
   $('#sortseg').style.display=$('#layseg').style.display=state.view==='directory'?'':'none';
   if(state.view==='directory')renderDirectory(list);else renderMap(list);
 }
@@ -947,6 +978,7 @@ window.A={
   mapPref:s=>{history.replaceState(null,'','#/map'+(s?'/'+s:''));state.sel=s;state.view='map';if(onExplore())update();else route();},
   pv:k=>{state.preview=k;applyPreview();},
   toggleFilters:()=>{state.showFilters=!state.showFilters;update();},
+  fpanel:o=>document.body.classList.toggle('fopen',!!o),
   openEnt:s=>{const el=document.querySelector(`.ent[data-slug="${s}"] .th`);A.openFig(el,s,0);},
   openFig:(el,s,i)=>{
     if(!desk()||!$('#dp'))return A.friend(s);
