@@ -387,7 +387,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  :root{--pad:16px}
  .util .url{display:none}
  .hd{flex-direction:column;align-items:flex-start;gap:6px}
- .nav{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px}
+ .nav{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none}
+ .nav::-webkit-scrollbar{display:none}
  .nav a{white-space:nowrap}
  .intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
  .intro h1{font-size:36px}
