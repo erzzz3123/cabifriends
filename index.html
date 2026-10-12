@@ -369,6 +369,10 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 .about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;padding-top:40px;padding-bottom:72px}
 .about h1{margin:0;font-weight:300;font-size:56px;line-height:1.05;max-width:14ch}
 .about p{font-size:17px;line-height:1.6;margin:0 0 18px;max-width:56ch}
+.about .pillars{border-top:1px solid var(--ink);margin-top:10px}
+.about .pillars>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:14px 0 12px;border-bottom:1px solid var(--soft)}
+.about .pillars p{margin:0;font-size:15px}
+.about .pillars .meta{padding-top:3px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);margin-top:36px}
 .stats div{padding:14px 0;display:grid;gap:4px}
 .stats b{font-weight:300;font-size:44px;line-height:1}
@@ -958,13 +962,21 @@ function renderSubmit(params){
 function renderAbout(){
   app.innerHTML=`
   <section class="about wrap">
-    <div><div class="meta mute" style="margin-bottom:14px">${T('About','概要')}</div><h1>${T('A directory of our friends across Japan.','日本各地の、私たちの友人のディレクトリ。')}</h1>
+    <div><div class="meta mute" style="margin-bottom:14px">${T('About','概要')}</div><h1>${T('Behind every good food in Japan, there is someone.','日本の<br>おいしいものの<br>向こうには、<br>いつも誰かがいる。')}</h1>
       <div class="stats"><div><b>${TOTAL}</b><span class="meta">${T('Friends','友人')}</span></div><div><b>${PLACES.length}</b><span class="meta">${T('Prefectures with Friends','友人がいる都道府県')}</span></div><div><b>47</b><span class="meta">${T('Food guides','食ガイド')}</span></div></div></div>
     <div>
-      <p>${T('Cabi &amp; Friends collects the people, producers, makers, farmers, restaurants and shops that Cabi meets and works with throughout Japan.','Cabi &amp; Friendsは、Cabiが日本各地で出会い、ともに仕事をしている人、生産者、つくり手、農家、飲食店、お店を集めたものです。')}</p>
-      <p>${T('It is personal rather than complete. Everyone here is someone we know, have visited, buy from or admire. The directory grows slowly, as we travel.','網羅的ではなく、個人的なものです。ここにいるのは皆、私たちが知っている、訪ねた、仕入れている、あるいは尊敬している人たちです。ディレクトリは旅とともに、少しずつ育っていきます。')}</p>
-      <p>${T('Each of the 47 prefectures has a small food guide, including the ones where we don’t have Friends yet, so the map is useful for learning what grows and gets made where.','47都道府県それぞれに小さな食ガイドがあります。まだ友人がいない県も含めて、どこで何が育ち、何がつくられているかを知る地図として使えます。')}</p>
-      <p>${T('Cabi &amp; Friends is part of Cabi Foods. It isn’t a shop, but many of the Friends here are behind what we make.','Cabi &amp; FriendsはCabi Foodsの一部です。お店ではありませんが、ここにいる友人の多くが、私たちのつくるものを支えています。')}</p>
+      <div>
+      <p>${T('What if you knew who brewed your soy sauce? Which island your salt came from, which family pressed your sesame oil, which valley grew your tea?','もしも、いつもの醤油を誰が仕込んだのか知っていたら。塩がどの島から来て、ごま油をどの家族が搾り、お茶がどの谷で育ったのかを知っていたら。')}</p>
+      <p>${T('Food in Japan is made by a quiet network of people. Brewers, farmers, salt makers, millers, foragers. Most are small, many have been at it for generations, and few are easy to find.','日本の食は、静かなつながりによってつくられています。蔵元、農家、塩づくり、製油所、山の草木を採る人。その多くは小さく、何代にもわたって続いていて、そして見つけにくい。')}</p>
+      <p>${T('Eating well sounds simple. It starts with knowing who to ask.','おいしく食べることは、シンプルに聞こえます。でもそれは、誰に聞けばいいかを知ることから始まります。')}</p>
+      <p>${T('Cabi &amp; Friends maps that network, prefecture by prefecture: the people we work with, the places they come from, and the foods each region is known for.','Cabi &amp; Friendsは、そのつながりを都道府県ごとに地図にしています。私たちがともに仕事をする人、その人たちが暮らす土地、そしてそれぞれの地域を代表する食べ物。')}</p>
+      </div>
+      <div class="pillars">
+        <div><div class="meta">${T('People','人')}</div><p>${T('Producers we know, have visited and buy from. Each one is someone we would send a friend to.','私たちが知っていて、訪ね、仕入れている生産者。友人を紹介したくなる人たちです。')}</p></div>
+        <div><div class="meta">${T('Places','土地')}</div><p>${T('A food guide for all 47 prefectures, including the ones where we have no Friends yet.','47都道府県すべての食ガイド。まだ友人がいない県も含めて。')}</p></div>
+        <div><div class="meta">${T('Food','食')}</div><p>${T('What grows, gets made and comes into season where, and who is behind it.','どこで何が育ち、つくられ、旬を迎えるのか。そして、その向こうにいる人。')}</p></div>
+      </div>
+      <p style="margin-top:28px">${T('The network grows as we travel. Cabi &amp; Friends is part of Cabi Foods, and many of the people here are behind what we make.','このつながりは、旅とともに広がっていきます。Cabi &amp; FriendsはCabi Foodsの一部で、ここにいる多くの人が、私たちのつくるものを支えています。')}</p>
       <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Submit a Producer','Cabi &amp; Friendsになる')}</a></div>
     </div>
   </section>`;
