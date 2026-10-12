@@ -1170,20 +1170,19 @@ const lift=()=>{if(!B.classList.contains('intro'))return;const now=performance.n
 applyLangData();applyStatic();
 app.innerHTML=`<div class="wrap meta mute" style="padding:60px var(--pad)">${T('Loading the archive…','読み込み中…')}</div>`;
 loadGeo().then(()=>{route();lift();}).catch(err=>{console.error(err);route();lift();});
-})();
-</script>
-<script>
-/* ---------- Notifications ---------- */
+
+/* ---------- Notifications (inside the main scope so they can use F, P, T, foodUrl) ---------- */
 (function(){
 const SEEN='cf_welcomed';
 const seen=()=>{try{if(localStorage.getItem(SEEN))return true;}catch(e){}return document.cookie.split('; ').some(c=>c.startsWith(SEEN+'='));};
 const markSeen=()=>{try{localStorage.setItem(SEEN,'1');}catch(e){}document.cookie=SEEN+'=1; max-age=31536000; path=/; SameSite=Lax';};
 const thumb=u=>!u?null:/^(localhost|127\.0\.0\.1)$/.test(location.hostname)||u.startsWith('/assets')?u:'/_vercel/image?url='+encodeURIComponent(u)+'&w=200&q=80';
 const photoOf=f=>{const im=(f&&f.images||[]).find(i=>i.src&&!isVid(i.src));return im?thumb(im.src):null;};
-// circle icon: kind = logo | food | photo; crop = [x, y, size] in % of the photo for a face crop
+// circle icon: kind = logo | food | photo; crop = [background-size %, x %, y %] to frame a face
 const icon=(src,kind,crop)=>{if(!src)return `<span class="ic"></span>`;
-  const st=crop?` style="width:${100/crop[2]*100}%;height:auto;left:${-crop[0]/crop[2]*100}%;top:${-crop[1]/crop[2]*100}%;inset:auto;object-fit:initial;max-width:none"`:'';
-  return `<span class="ic ${kind}"><img src="${src}" alt=""${st}></span>`;};
+  if(kind==='food')return `<span class="ic food"><img src="${src}" alt=""></span>`;
+  const c=crop||(kind==='logo'?[215,50,50]:['cover',50,50]);
+  return `<span class="ic ${kind}" style="background:#fff url('${src}') ${c[1]}% ${c[2]}%/${c[0]==='cover'?'cover':c[0]+'% auto'} no-repeat"></span>`;};
 const card=(n,tag='button')=>`<${tag} class="nt" ${n.href?`data-href="${n.href}"`:''}>${icon(n.icon,n.kind,n.crop)}<b>${n.title}</b><time>${n.time||T('now','今')}</time><p>${n.body}</p></${tag}>`;
 const go=h=>{if(h)location.hash=h;};
 
@@ -1196,7 +1195,7 @@ function welcome(){
      body:T('Meet the makers keeping Japan’s everyday flavours alive. Our Friends are brewers, farmers and salt makers we know by name, across all 47 prefectures.','日本の毎日の味を守り続ける、つくり手たちに会いに行こう。私たちの友人は、名前で呼び合える蔵元、農家、塩づくりの人たち。47都道府県に広がっています。')},
     {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Noto fish sauce · Ishikawa','いしる · 石川'),href:'#/pref/ishikawa',time:T('2m ago','2分前'),
      body:T(`Every region has flavours you won’t find anywhere else. Explore ${guides} regional foods in our guides to all 47 prefectures.`,`土地ごとに、そこでしか出会えない味があります。47都道府県の食ガイドで、${guides}の土地の食べ物をたどってみてください。`)},
-    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[42,14,40],title:T('Morita Shoyu · Shimane','森田醤油店 · 島根'),href:'#/friend/morita-shoyu',time:T('5m ago','5分前'),
+    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[376,57.6,22.5],title:T('Morita Shoyu · Shimane','森田醤油店 · 島根'),href:'#/friend/morita-shoyu',time:T('5m ago','5分前'),
      body:T('Know who made it. Every Friend has a profile, so you can meet the people behind your soy sauce and reach them directly.','誰がつくったかがわかる。友人一人ひとりのプロフィールから、醤油の向こうにいる人に出会い、直接つながることができます。')},
   ].filter(Boolean);
   const scrim=document.createElement('div');scrim.className='nc-scrim';
@@ -1214,7 +1213,7 @@ function welcome(){
 /* Every minute or two: a new Friend or a regional food guide, in empty header space */
 let pool=[],pi=0,timer=0,hideT=0,el=null;
 function buildPool(){
-  const fr=[...FRIENDS].sort((a,b)=>b.id-a.id).slice(0,8).map(f=>({icon:photoOf(f)||foodUrl(f.tags[0]),kind:photoOf(f)?'photo':'food',href:'#/friend/'+f.slug,
+  const fr=[...FRIENDS].sort((a,b)=>b.id-a.id).slice(0,8).map(f=>({icon:photoOf(f)||'/assets/cabi-friends-black.png',kind:photoOf(f)?'photo':'logo',href:'#/friend/'+f.slug,
     title:T('New Friend','新しい友人'),body:`${esc(f.name_en)} · ${P[f.prefecture].name_en}. ${esc((f.description||f.makes||'').split(/(?<=[.。])\s*/)[0])}`}));
   const gd=PREFS.filter(p=>p._spec.some(s=>foodUrl(s))).sort(()=>Math.random()-.5).slice(0,8).map(p=>{const sp=p._spec.find(s=>foodUrl(s));return {icon:foodUrl(sp),kind:'food',href:'#/pref/'+p.slug,
     title:T('Food guide','食ガイド')+' · '+p.name_en,body:esc(p.description)};});
@@ -1228,8 +1227,8 @@ function spot(){
   if(innerWidth<=760){const left=L.right+14,w=H.right-12-left;if(w<190)return null;return {left,top:L.top+scrollY+2,w};}
   const w=300,right=N.left-28;if(right-(L.right+28)<w)return null;return {left:right-w,top:H.top+scrollY+(H.height-72)/2,w};
 }
-function show(){
-  if(window.__ncOpen||document.body.classList.contains('fopen')||document.hidden)return ambientSoon();
+function show(force){
+  if(!force&&(window.__ncOpen||document.body.classList.contains('fopen')||document.hidden))return ambientSoon();
   if(!pool.length)buildPool();const s=spot();if(!s||!pool.length)return ambientSoon();
   const n=pool[pi++%pool.length];
   el?.remove();el=document.createElement('div');el.className='na';el.style.cssText=`left:${s.left}px;top:${s.top}px;width:${s.w}px`;
@@ -1250,6 +1249,7 @@ addEventListener('hashchange',()=>{if(el)hide(el,true);});
 (function start(){if(document.body.classList.contains('intro'))return setTimeout(start,200);
   setTimeout(welcome,700);if(seen())ambientSoon(25000);})();
 window.__nt={welcome,show,reset:()=>{try{localStorage.removeItem(SEEN);}catch(e){}document.cookie=SEEN+'=; max-age=0; path=/';}};
+})();
 })();
 </script>
 </body>
