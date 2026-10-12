@@ -440,7 +440,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .seasons div{grid-template-columns:90px minmax(0,1fr) 45px;align-items:center}
  .seasons .simg{display:flex;height:45px;width:45px;align-items:center;justify-content:flex-end}
  .seasons .simg img{max-height:100%;max-width:100%;object-fit:contain;display:block}
- .tag:has(.pimg){display:inline-flex;align-items:center;gap:6px;padding:10px 14px}
+ .tag:has(.pimg){display:inline-flex;align-items:center;gap:6px;padding:10px 16px 10px 14px}
  .tag .pimg{display:block;width:39px;height:39px;object-fit:contain;margin:0}
  /* directory controls (sizes divided by .9 to undo the page zoom): a filter icon by the search opens a panel that fades and slides in from the right */
  .ficon{display:flex;align-items:center;gap:4px;flex:none;background:none;border:0;padding:6px 0 6px 8px;cursor:pointer;color:var(--ink);font-size:11px;letter-spacing:.04em}
@@ -460,7 +460,15 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .nav a.on,.nav a:hover{border-bottom-color:transparent}
  .nav a.on::before{content:"• "}
  /* header: let it grow so the nav under the logo isn't cut off */
- .hd{height:auto!important}
+ .hd{height:auto!important;gap:16px;padding-bottom:2px}
+ .nav{padding-bottom:0}
+ .logo{width:86px;height:65px;background-size:193px auto}
+ /* footer: Cabi logo left, shop link right, the credit line centred underneath */
+ .ft{height:auto!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"logo shop" "by by";gap:18px 16px}
+ .ft .ft-l{display:contents!important}
+ .ft .cabi{grid-area:logo;width:min(200px,50vw);height:80px!important}
+ .ft .links{grid-area:shop;justify-self:end}
+ .ft .ft-by{grid-area:by;justify-self:center;text-align:center}
  .fgrid{grid-template-columns:1fr}
  .form-wrap h1,.about h1{font-size:38px}
  .note{position:static}
@@ -501,9 +509,9 @@ body.r-about>.ft{display:none}
 </header>
 <main id="root"></main>
 <footer class="ft wrap" style="height: 120px">
-  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+  <div class="ft-l" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
     <span class="cabi" aria-label="Cabi" style="height: 110px"></span>
-    <span class="meta" data-t="Cabi &amp; Friends is a project by Cabi Foods" data-ja="Cabi &amp; FriendsはCabi Foodsのプロジェクトです">Cabi &amp; Friends is a project by Cabi Foods</span>
+    <span class="meta ft-by" data-t="Cabi &amp; Friends is a project by Cabi Foods" data-ja="Cabi &amp; FriendsはCabi Foodsのプロジェクトです">Cabi &amp; Friends is a project by Cabi Foods</span>
   </div>
   <div class="links ui">
     <a href="https://cabifoods.com" target="_blank" rel="noopener" data-t="Shop Cabi Foods ↗" data-ja="Cabi Foodsで買う ↗">Shop Cabi Foods ↗</a>
