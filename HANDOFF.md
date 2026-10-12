@@ -27,7 +27,7 @@ High-fidelity. Final colours, type, spacing and interactions.
 Left: tabs "Cabi Foods ↗" (external) and "Cabi & Friends" (active: ink fill, white text), each with a right rule. Right: language toggle `EN / 日本語`, active underlined, inactive muted. Choice persists in `localStorage.cf_lang`.
 
 ### Header (100px, bottom rule)
-Cabi & Friends lockup (`assets/cabi-friends-black.png`, 96×72 box, background-size 214px). Nav right: Directory · Map · About · Submit a Producer | Cabi Foods ↗. 12px uppercase; active/hover = 1px bottom border.
+Cabi & Friends lockup (`assets/cabi-friends-black.png`, 96×72 box, background-size 214px). Nav right: Directory · Map · About · Get featured (掲載の相談) | Cabi Foods ↗. 12px uppercase; active/hover = 1px bottom border.
 
 ### Explore bar (Directory + Map)
 Row with bottom rule: search input (12px, 35px tall, placeholder "Search friends, places, ingredients…"; `/` focuses, Esc clears) and text controls styled as `[ ] Label` / `[•] Label`: Directory · Map, List · Grid, "Sort: …" (cycles No. 1 → / Random / Recently added / A–Z / North → South), Filter (n), Random Friend ↝.
