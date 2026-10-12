@@ -75,9 +75,11 @@ button{font:inherit;color:inherit}
 .logo{display:block;width:96px;height:72px;background:url("/assets/cabi-friends-black.png") center/214px auto no-repeat;flex:none}
 .logo:hover{opacity:.85}
 .nav{display:flex;gap:28px;align-items:center}
-.nav a{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:400;padding:4px 0;border-bottom:1px solid transparent}
-.nav a:hover{text-decoration:none;border-bottom-color:var(--ink)}
-.nav a.on{border-bottom-color:var(--ink)}
+.nav a{font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:400;padding:4px 0;white-space:nowrap}
+.nav a:hover{text-decoration:underline;text-underline-offset:3px}
+/* the page links read like the directory toggles: [ ] Map, [•] Directory */
+.nav a[data-r]::before{content:"[ ] ";white-space:pre}
+.nav a[data-r].on::before{content:"[•] "}
 .nav .sep{width:1px;height:14px;background:var(--soft)}
 
 /* intro */
@@ -176,6 +178,19 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .empty p{margin:0;font-size:20px;max-width:34ch}
 
 /* directory list (index style) */
+.hi{border-bottom:1px solid var(--ink)}
+.hi-bar{display:flex;width:100%;justify-content:space-between;align-items:center;gap:16px;background:none;border:0;padding:14px 0 10px;cursor:pointer;color:var(--ink);font:inherit;text-transform:inherit;letter-spacing:inherit;text-align:left}
+.hi-t{width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin-right:-4px}
+.hi-t svg{width:15px;height:15px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.hi.shut .hi-t svg{transform:rotate(180deg)}
+/* height eases via grid rows (no measuring, no jumps); content fades with it */
+.hi-body{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .5s ease .12s}
+.hi.shut .hi-body{grid-template-rows:0fr;opacity:0;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
+.hi-in{min-height:0;overflow:hidden}
+.hi-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:end;padding:8px 0 30px}
+.hi h1{margin:0;font-weight:300;font-size:46px;line-height:1.06;letter-spacing:-.02em;max-width:17ch;text-wrap:balance}
+.hi p{font-size:16px;line-height:1.55;margin:0 0 14px;max-width:46ch}
+.hi-more{font-size:12px;letter-spacing:.04em}
 .ex-row{display:flex;gap:16px 32px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:14px;padding-bottom:10px;border-bottom:1px solid var(--ink)}
 .ex-row.nob{border-bottom:0}
 .ex-ctl{display:flex;gap:12px 32px;flex-wrap:wrap;align-items:center}
@@ -406,6 +421,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .nav a{white-space:nowrap}
  .intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
  .intro h1{font-size:36px}
+ .hi-grid{grid-template-columns:1fr;gap:14px;padding-bottom:24px}
+ .hi h1{font-size:32px}
  .search input{font-size:20px;padding:12px 0}
  .search .k{display:none}
  .trow{grid-template-columns:1fr;gap:6px}
@@ -470,8 +487,6 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .fpanel #tags{display:block!important;margin-top:0!important}
  .fpanel .tlist{flex-wrap:wrap;overflow:visible}
  /* main nav: the current page gets a dot instead of an underline */
- .nav a.on,.nav a:hover{border-bottom-color:transparent}
- .nav a.on::before{content:"• "}
  /* header: let it grow so the nav under the logo isn't cut off */
  .hd{height:auto!important;gap:16px;padding-bottom:2px}
  .nav{padding-bottom:0}
@@ -680,6 +695,14 @@ function mountExplore(){
   mounted=true;
   app.innerHTML=`
   <section class="wrap">
+    <div class="hi${introShut()?' shut':''}" id="hi">
+      <button class="hi-bar" onclick="A.intro()" aria-expanded="${!introShut()}" aria-controls="hi-body"><span class="meta">${T('About Cabi &amp; Friends','Cabi &amp; Friendsについて')}</span><span class="hi-t" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10.5 8 5.5l5 5"/></svg></span></button>
+      <div class="hi-body" id="hi-body"><div class="hi-in"><div class="hi-grid">
+        <h1>${T('Meet the makers keeping Japan’s everyday flavours alive.','日本の毎日の味を守り続ける、つくり手たちへ。')}</h1>
+        <div><p>${T('A directory of the people and places behind the food we love: brewers, farmers, salt makers and foragers we know by name, across all 47 prefectures. Search by place or ingredient, or follow the map from region to region.','私たちが愛する食べ物の向こうにいる人と土地のディレクトリ。名前で呼び合える蔵元、農家、塩づくり、山の草木を採る人たちが、47都道府県に広がっています。場所や食材から探したり、地図で地域をたどったりしてみてください。')}</p>
+        <a class="hi-more" href="#/about">${T('More about the project →','プロジェクトについて →')}</a></div>
+      </div></div></div>
+    </div>
     <div class="ex-row">
       <div class="search">
         <input id="q" type="search" autocomplete="off" placeholder="" aria-label="${T('Search friends, places, ingredients','友人、場所、食材を検索')}" style="font-size: 12px; height: 35px"><span class="qhint" id="qhint" aria-hidden="true"></span>
@@ -689,7 +712,6 @@ function mountExplore(){
       <div class="fpanel" id="fpanel">
       <div class="fp-hd"><span class="meta">${T('Filter','絞り込み')}</span><button class="lnk ui" onclick="A.fpanel(false)">${T('Close ×','閉じる ×')}</button></div>
       <div class="ex-ctl">
-        <span id="viewseg"><button class="bk" data-v="directory">${T('Directory','一覧')}</button><button class="bk" data-v="map">${T('Map','地図')}</button></span>
         <span id="layseg"><button class="bk" data-l="list">${T('List','リスト')}</button><button class="bk" data-l="grid">${T('Grid','グリッド')}</button></span>
         <span id="sortseg"><button class="bk plain" id="sortbtn"></button></span>
         <button class="bk plain" id="ftoggle" onclick="A.toggleFilters()"></button>
@@ -708,12 +730,13 @@ function mountExplore(){
     // Enter on an empty box searches the suggestion currently showing
     if(e.key==='Enter'&&!q.value.trim()){const w=hintWords()[hintI%hintWords().length];q.value=state.q=w;update();}});
   showHint();
-  $('#viewseg').addEventListener('click',e=>{const v=e.target.dataset.v;if(v)location.hash=v==='map'?'#/map'+(state.sel?'/'+state.sel:''):'#/directory';});
   $('#layseg').addEventListener('click',e=>{const l=e.target.dataset.l;if(l){state.layout=l;update();}});
   $('#sortseg').addEventListener('click',()=>{const k=Object.keys(SORTS);const s=k[(k.indexOf(state.sort)+1)%k.length];if(s==='shuffle')state.order=shuffle(state.order);state.sort=s;update();});
   renderTags();placeTags();
   mapBuilt=false;
 }
+/* Homepage intro: open on arrival; closing it is remembered for the rest of the visit */
+const introShut=()=>{try{return sessionStorage.getItem('cf_intro')==='shut';}catch(e){return false;}};
 /* Search hint: rotates through places and foods, starting with Kyoto and soy sauce */
 const HINTS_EN=['Kyoto','Soy sauce','Hokkaido','Miso','Okinawa','Sesame oil','Nagano','Salt','Akita','Matcha','Shimane','Sake'];
 const HINTS_JA=['京都','醤油','北海道','味噌','沖縄','ごま油','長野','塩','秋田','抹茶','島根','酒'];
@@ -749,6 +772,7 @@ function update(){
   document.querySelectorAll('#sortseg button').forEach(b=>b.classList.toggle('on',b.dataset.s===state.sort));
   document.querySelectorAll('#layseg button').forEach(b=>b.classList.toggle('on',b.dataset.l===state.layout));
   $('.ex-row').classList.toggle('nob',state.view==='map');
+  $('#hi').hidden=state.view!=='directory';
   $('#sortbtn').textContent=T('Sort: ','並び替え：')+T(SORTS[state.sort],SORTS_JA[state.sort]);
   $('#ftoggle').textContent=(state.showFilters?T('Hide filters','絞り込みを閉じる'):T('Filter','絞り込み'))+(state.tags.size?` (${state.tags.size})`:'');
   $('#tags').style.display=state.showFilters?'':'none';
@@ -1064,6 +1088,7 @@ window.A={
   pv:k=>{state.preview=k;applyPreview();},
   toggleFilters:()=>{state.showFilters=!state.showFilters;update();},
   fpanel:o=>document.body.classList.toggle('fopen',!!o),
+  intro:()=>{const h=$('#hi'),shut=!h.classList.contains('shut');h.classList.toggle('shut',shut);h.querySelector('.hi-bar').setAttribute('aria-expanded',!shut);try{sessionStorage.setItem('cf_intro',shut?'shut':'open');}catch(e){}},
   openEnt:s=>{const el=document.querySelector(`.ent[data-slug="${s}"] .th`);A.openFig(el,s,0);},
   openFig:(el,s,i)=>{
     if(!desk()||!$('#dp'))return A.friend(s);
