@@ -178,17 +178,14 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .empty p{margin:0;font-size:20px;max-width:34ch}
 
 /* directory list (index style) */
-.hi{border-bottom:1px solid var(--ink)}
-.hi-bar{display:flex;width:100%;justify-content:space-between;align-items:center;gap:16px;background:none;border:0;padding:14px 0 10px;cursor:pointer;color:var(--ink);font:inherit;text-transform:inherit;letter-spacing:inherit;text-align:left}
-.hi-t{width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin-right:-4px}
-.hi-t svg{width:15px;height:15px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.hi.shut .hi-t svg{transform:rotate(180deg)}
+.hi-t{position:absolute;top:14px;right:-4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:var(--ink)}
+.hi-t svg{width:15px;height:15px}
 /* height eases via grid rows (no measuring, no jumps); content fades with it */
 .hi-body{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .5s ease .12s}
 .hi.shut .hi-body{grid-template-rows:0fr;opacity:0;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
 .hi-in{min-height:0;overflow:hidden}
-.hi-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:end;padding:8px 0 30px}
-.hi h1{margin:0;font-weight:300;font-size:46px;line-height:1.06;letter-spacing:-.02em;max-width:17ch;text-wrap:balance}
+.hi-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:end;padding:40px 0 32px;border-bottom:1px solid var(--ink)}
+.hi h1{margin:0;font-weight:300;font-size:46px;line-height:1.08;letter-spacing:-.02em;max-width:17ch;text-wrap:balance;text-transform:none}
 .hi p{font-size:16px;line-height:1.55;margin:0 0 14px;max-width:46ch}
 .hi-more{font-size:12px;letter-spacing:.04em}
 .ex-row{display:flex;gap:16px 32px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:14px;padding-bottom:10px;border-bottom:1px solid var(--ink)}
@@ -421,7 +418,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .nav a{white-space:nowrap}
  .intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
  .intro h1{font-size:36px}
- .hi-grid{grid-template-columns:1fr;gap:14px;padding-bottom:24px}
+ .hi-grid{grid-template-columns:1fr;gap:14px;padding:30px 0 24px}
+ .hi-t{top:6px}
  .hi h1{font-size:32px}
  .search input{font-size:20px;padding:12px 0}
  .search .k{display:none}
@@ -519,6 +517,7 @@ body.r-about>.ft{display:none}
 .nt{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:1px 12px;align-items:center;width:100%;padding:13px 16px 13px 13px;border-radius:24px;background:rgba(242,241,239,.8);border:1px solid rgba(67,47,41,.08);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8);color:var(--ink);font-family:var(--font-mono-jp);font-weight:300;text-align:left;text-transform:none;letter-spacing:0;font-size:13px;line-height:1.34;cursor:pointer;-webkit-font-smoothing:antialiased}
 .nt .ic{grid-row:1/3;align-self:center;width:52px;height:52px;border-radius:50%;overflow:hidden;position:relative;background:#fff;border:1px solid rgba(67,47,41,.08)}
 .nt .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.nt .ic.logo{border-radius:23%}
 .nt .ic.food img{inset:4px;width:calc(100% - 8px);height:calc(100% - 8px)}
 .nt b{font-weight:300;font-size:13px;letter-spacing:0;text-transform:none;-webkit-text-stroke:.45px currentColor;paint-order:stroke fill;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:end}
 .nt time{font-size:12px;color:rgba(67,47,41,.55);white-space:nowrap;align-self:end}
@@ -696,8 +695,8 @@ function mountExplore(){
   app.innerHTML=`
   <section class="wrap">
     <div class="hi${introShut()?' shut':''}" id="hi">
-      <button class="hi-bar" onclick="A.intro()" aria-expanded="${!introShut()}" aria-controls="hi-body"><span class="meta">${T('About Cabi &amp; Friends','Cabi &amp; Friendsについて')}</span><span class="hi-t" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10.5 8 5.5l5 5"/></svg></span></button>
       <div class="hi-body" id="hi-body"><div class="hi-in"><div class="hi-grid">
+        <button class="hi-t" onclick="A.intro(true)" aria-label="${T('Close the introduction','紹介を閉じる')}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M3 10.5 8 5.5l5 5"/></svg></button>
         <h1>${T('Meet the makers keeping Japan’s everyday flavours alive.','日本の毎日の味を守り続ける、つくり手たちへ。')}</h1>
         <div><p>${T('A directory of the people and places behind the food we love: brewers, farmers, salt makers and foragers we know by name, across all 47 prefectures. Search by place or ingredient, or follow the map from region to region.','私たちが愛する食べ物の向こうにいる人と土地のディレクトリ。名前で呼び合える蔵元、農家、塩づくり、山の草木を採る人たちが、47都道府県に広がっています。場所や食材から探したり、地図で地域をたどったりしてみてください。')}</p>
         <a class="hi-more" href="#/about">${T('More about the project →','プロジェクトについて →')}</a></div>
@@ -737,6 +736,13 @@ function mountExplore(){
 }
 /* Homepage intro: open on arrival; closing it is remembered for the rest of the visit */
 const introShut=()=>{try{return sessionStorage.getItem('cf_intro')==='shut';}catch(e){return false;}};
+const onHome=()=>/^#\/?(directory)?$/.test(location.hash||'#/');
+function navMark(r){const intro=r==='directory'&&onHome()&&!introShut();
+  document.querySelectorAll('#nav a[data-r]').forEach(a=>a.classList.toggle('on',intro?a.dataset.r==='about':a.dataset.r===r));}
+// On the homepage, About opens the intro and Directory closes it (no page change)
+document.getElementById('nav').addEventListener('click',e=>{const a=e.target.closest('a[data-r]');if(!a||!onHome()||!$('#hi'))return;
+  if(a.dataset.r==='about'&&introShut()){e.preventDefault();A.intro(false);}
+  else if(a.dataset.r==='directory'&&!introShut()){e.preventDefault();A.intro(true);}});
 /* Search hint: rotates through places and foods, starting with Kyoto and soy sauce */
 const HINTS_EN=['Kyoto','Soy sauce','Hokkaido','Miso','Okinawa','Sesame oil','Nagano','Salt','Akita','Matcha','Shimane','Sake'];
 const HINTS_JA=['京都','醤油','北海道','味噌','沖縄','ごま油','長野','塩','秋田','抹茶','島根','酒'];
@@ -1088,7 +1094,8 @@ window.A={
   pv:k=>{state.preview=k;applyPreview();},
   toggleFilters:()=>{state.showFilters=!state.showFilters;update();},
   fpanel:o=>document.body.classList.toggle('fopen',!!o),
-  intro:()=>{const h=$('#hi'),shut=!h.classList.contains('shut');h.classList.toggle('shut',shut);h.querySelector('.hi-bar').setAttribute('aria-expanded',!shut);try{sessionStorage.setItem('cf_intro',shut?'shut':'open');}catch(e){}},
+  // The homepage intro is the About tab: open = [•] About, closed = [•] Directory
+  intro:shut=>{const h=$('#hi');if(!h)return;h.classList.toggle('shut',shut);try{sessionStorage.setItem('cf_intro',shut?'shut':'open');}catch(e){}navMark('directory');if(!shut)window.scrollTo({top:0,behavior:'smooth'});},
   openEnt:s=>{const el=document.querySelector(`.ent[data-slug="${s}"] .th`);A.openFig(el,s,0);},
   openFig:(el,s,i)=>{
     if(!desk()||!$('#dp'))return A.friend(s);
@@ -1138,7 +1145,7 @@ function route(){
   const [path,qs]=location.hash.replace(/^#\/?/,'').split('?');
   const parts=path.split('/').filter(Boolean).map(decodeURIComponent);const params=new URLSearchParams(qs||'');
   const r=parts[0]||'directory';
-  document.querySelectorAll('#nav a[data-r]').forEach(a=>a.classList.toggle('on',a.dataset.r===r));
+  navMark(r);
   document.body.classList.toggle('r-about',r==='about');
   peek.style.display='none';tipHide();
   if(r==='directory'||r==='map'){
@@ -1209,7 +1216,7 @@ const photoOf=f=>{const im=(f&&f.images||[]).find(i=>i.src&&!isVid(i.src));retur
 // circle icon: kind = logo | food | photo; crop = [background-size %, x %, y %] to frame a face
 const icon=(src,kind,crop)=>{if(!src)return `<span class="ic"></span>`;
   if(kind==='food')return `<span class="ic food"><img src="${src}" alt=""></span>`;
-  const c=crop||(kind==='logo'?[215,50,50]:['cover',50,50]);
+  const c=crop||(kind==='logo'?[188,50,50]:['cover',50,50]);
   return `<span class="ic ${kind}" style="background:#fff url('${src}') ${c[1]}% ${c[2]}%/${c[0]==='cover'?'cover':c[0]+'% auto'} no-repeat"></span>`;};
 const card=(n,tag='button')=>`<${tag} class="nt" ${n.href?`data-href="${n.href}"`:''}>${icon(n.icon,n.kind,n.crop)}<b>${n.title}</b><time>${n.time||T('now','今')}</time><p>${n.body}</p></${tag}>`;
 const go=h=>{if(h)location.hash=h;};
@@ -1221,10 +1228,10 @@ function welcome(){
   const items=[
     {icon:'/assets/cabi-friends-black.png',kind:'logo',title:'Cabi &amp; Friends',href:'#/about',
      body:T('Meet the makers keeping Japan’s everyday flavours alive. Our Friends are brewers, farmers and salt makers we know by name, across all 47 prefectures.','日本の毎日の味を守り続ける、つくり手たちに会いに行こう。私たちの友人は、名前で呼び合える蔵元、農家、塩づくりの人たち。47都道府県に広がっています。')},
-    {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Noto fish sauce · Ishikawa','いしる · 石川'),href:'#/pref/ishikawa',time:T('2m ago','2分前'),
-     body:T(`Every region has flavours you won’t find anywhere else. Explore ${guides} regional foods in our guides to all 47 prefectures.`,`土地ごとに、そこでしか出会えない味があります。47都道府県の食ガイドで、${guides}の土地の食べ物をたどってみてください。`)},
-    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[376,57.6,22.5],title:T('Morita Shoyu · Shimane','森田醤油店 · 島根'),href:'#/friend/morita-shoyu',time:T('5m ago','5分前'),
-     body:T('Know who made it. Every Friend has a profile, so you can meet the people behind your soy sauce and reach them directly.','誰がつくったかがわかる。友人一人ひとりのプロフィールから、醤油の向こうにいる人に出会い、直接つながることができます。')},
+    {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Food guides','食ガイド'),href:'#/map',time:T('2m ago','2分前'),
+     body:T(`Every region of Japan has its own food culture. Our guides show what each of the 47 prefectures is known for and what comes into season, ${guides} regional foods in all.`,`日本の食は、土地ごとに違います。47都道府県それぞれの名産と旬を、${guides}の土地の食べ物とともに紹介しています。`)},
+    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[376,57.6,22.5],title:T('Producers','つくり手'),href:'#/directory',time:T('5m ago','5分前'),
+     body:T('Behind every product is a person. Each Friend has a profile with their story and craft, so you can find the makers and connect with them directly.','おいしいものの向こうには、いつも人がいます。友人一人ひとりのプロフィールで、物語やものづくりを知り、つくり手と直接つながることができます。')},
   ].filter(Boolean);
   const scrim=document.createElement('div');scrim.className='nc-scrim';
   const nc=document.createElement('div');nc.className='nc';nc.setAttribute('role','dialog');nc.setAttribute('aria-label',T('Welcome','ようこそ'));
