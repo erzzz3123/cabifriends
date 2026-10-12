@@ -178,13 +178,13 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .empty p{margin:0;font-size:20px;max-width:34ch}
 
 /* directory list (index style) */
-.hi-t{position:absolute;top:14px;right:-4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:var(--ink)}
-.hi-t svg{width:15px;height:15px}
 /* height eases via grid rows (no measuring, no jumps); content fades with it */
 .hi-body{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .5s ease .12s}
 .hi.shut .hi-body{grid-template-rows:0fr;opacity:0;transition:grid-template-rows .65s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
 .hi-in{min-height:0;overflow:hidden}
-.hi-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:end;padding:40px 0 32px;border-bottom:1px solid var(--ink)}
+/* first arrival: a slower, softer unfold with the text fading in behind it */
+.hi.arrive .hi-body{transition:grid-template-rows 1s cubic-bezier(.25,.8,.25,1),opacity 1.1s ease .2s}
+.hi-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:48px;align-items:start;padding:40px 0 32px;border-bottom:1px solid var(--ink)}
 .hi h1{margin:0;font-weight:300;font-size:46px;line-height:1.08;letter-spacing:-.02em;max-width:17ch;text-wrap:balance;text-transform:none}
 .hi p{font-size:16px;line-height:1.55;margin:0 0 14px;max-width:46ch}
 .hi-more{font-size:12px;letter-spacing:.04em}
@@ -429,7 +429,6 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
  .intro h1{font-size:36px}
  .hi-grid{grid-template-columns:1fr;gap:14px;padding:30px 0 24px}
- .hi-t{top:6px}
  .hi h1{font-size:32px}
  .search input{font-size:20px;padding:12px 0}
  .search .k{display:none}
@@ -708,9 +707,8 @@ function mountExplore(){
   mounted=true;
   app.innerHTML=`
   <section class="wrap">
-    <div class="hi${introShut()?' shut':''}" id="hi">
+    <div class="hi${introShut()?' shut':introArrived?'':' shut arrive'}" id="hi">
       <div class="hi-body" id="hi-body"><div class="hi-in"><div class="hi-grid">
-        <button class="hi-t" onclick="A.intro(true)" aria-label="${T('Close the introduction','紹介を閉じる')}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M3 10.5 8 5.5l5 5"/></svg></button>
         <h1>${T('Meet the makers keeping Japan’s everyday flavours alive.','日本の毎日の味を守り続ける、つくり手たちへ。')}</h1>
         <div><p>${T('A directory of the people and places behind the food we love: brewers, farmers, salt makers and foragers we know by name, across all 47 prefectures. Search by place or ingredient, or follow the map from region to region.','私たちが愛する食べ物の向こうにいる人と土地のディレクトリ。名前で呼び合える蔵元、農家、塩づくり、山の草木を採る人たちが、47都道府県に広がっています。場所や食材から探したり、地図で地域をたどったりしてみてください。')}</p>
         <a class="hi-more" href="#/about">${T('More about the project →','プロジェクトについて →')}</a></div>
@@ -746,9 +744,12 @@ function mountExplore(){
   $('#layseg').addEventListener('click',e=>{const l=e.target.dataset.l;if(l){state.layout=l;update();}});
   $('#sortseg').addEventListener('click',()=>{const k=Object.keys(SORTS);const s=k[(k.indexOf(state.sort)+1)%k.length];if(s==='shuffle')state.order=shuffle(state.order);state.sort=s;update();});
   renderTags();placeTags();
+  const hi=$('#hi');if(hi.classList.contains('arrive')){introArrived=true;(function open(){if(document.body.classList.contains('intro'))return setTimeout(open,120);
+    setTimeout(()=>{hi.classList.remove('shut');setTimeout(()=>hi.classList.remove('arrive'),1400);},250);})();}
   mapBuilt=false;
 }
 /* Homepage intro: open on arrival; closing it is remembered for the rest of the visit */
+let introArrived=false; // the unfold plays once per page load
 const introShut=()=>{try{return sessionStorage.getItem('cf_intro')==='shut';}catch(e){return false;}};
 const onHome=()=>/^#\/?(directory)?$/.test(location.hash||'#/');
 function navMark(r){const intro=r==='directory'&&onHome()&&!introShut();
