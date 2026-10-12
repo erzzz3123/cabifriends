@@ -498,6 +498,45 @@ body.r-about>.ft{display:none}
 /* Photos: 5px corners everywhere (thumbnails, panel, profile, previews, tooltips, the flying image) */
 .photo,.th img,.th video,.th .ph2,.dp-im>img,.dp-im>video,.dp-ph,.fly,#peek img,#peek video,#peek .ph,#tip .tth img,#tip .tth video,#tip .tth span{border-radius:5px}
 .fly{overflow:hidden}
+
+/* ---------- Notifications (iPhone / Mac style). Appended to <body>, outside the page zoom ---------- */
+.nt{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:2px 12px;align-items:center;width:100%;padding:12px 14px;border-radius:20px;background:rgba(246,244,242,.86);border:1px solid rgba(67,47,41,.12);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);color:var(--ink);font-family:var(--font-mono-jp);font-weight:300;text-align:left;text-transform:none;letter-spacing:0;font-size:13px;line-height:1.38;cursor:pointer;-webkit-font-smoothing:antialiased}
+.nt .ic{grid-row:1/3;align-self:center;width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;background:#fff;border:1px solid rgba(67,47,41,.1)}
+.nt .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.nt .ic.logo img{inset:6px;width:calc(100% - 12px);height:calc(100% - 12px)}
+.nt .ic.food img{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}
+.nt .ic.photo img{object-fit:cover}
+.nt b{font-weight:400;font-size:12px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt time{font-size:11px;color:var(--mute);white-space:nowrap}
+.nt p{grid-column:2/4;margin:0}
+/* first visit: a stack of three, closed with the round × */
+.nc-scrim{position:fixed;inset:0;z-index:89;background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;transition:opacity .45s ease}
+.nc{position:fixed;z-index:90;top:20px;right:20px;width:384px;display:grid;gap:10px}
+.nc-h{display:flex;justify-content:space-between;align-items:center;padding:0 4px 4px;opacity:0;transition:opacity .45s ease}
+.nc-h span{font-size:26px;font-weight:300;letter-spacing:-.01em;color:var(--ink)}
+.nc-x{width:34px;height:34px;border-radius:50%;border:1px solid rgba(67,47,41,.12);background:rgba(246,244,242,.86);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:var(--ink);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nc .nt{opacity:0;transform:translateY(-14px) scale(.98);transition:opacity .5s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+.nc.on .nc-h,.nc-scrim.on{opacity:1}
+.nc.on .nt{opacity:1;transform:none}
+.nc.on .nt:nth-of-type(2){transition-delay:.12s}.nc.on .nt:nth-of-type(3){transition-delay:.24s}.nc.on .nt:nth-of-type(4){transition-delay:.36s}
+.nc.out .nt,.nc.out .nc-h{opacity:0;transform:translateY(-10px);transition-delay:0s}
+/* occasional updates: sit in empty header space, fade slowly after 5 s */
+.na{position:absolute;z-index:70;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity 1.8s ease,transform .6s ease}
+.na.on{opacity:1;transform:none;pointer-events:auto;transition:opacity .5s ease,transform .5s ease}
+.na .nt{padding:9px 12px;grid-template-columns:34px minmax(0,1fr) auto;border-radius:18px}
+.na .ic{width:34px;height:34px}
+.na p{font-size:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.na .x{position:absolute;top:-7px;left:-7px;width:22px;height:22px;border-radius:50%;border:1px solid rgba(67,47,41,.18);background:#fff;color:var(--ink);font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.na:hover .x{opacity:1}
+@media (max-width:760px){
+ .nc{top:12px;left:12px;right:12px;width:auto}
+ .nc-h span{font-size:22px}
+ .na .x{opacity:1}
+ .na .nt{padding:8px 10px;gap:1px 9px;grid-template-columns:30px minmax(0,1fr) auto}
+ .na .ic{width:30px;height:30px}
+ .na b{font-size:10px}.na time{font-size:10px}.na p{font-size:11px;line-height:1.3}
+}
+@media (prefers-reduced-motion:reduce){.nc .nt,.na{transition:opacity .3s ease}}
 </style>
 </head>
 <body data-theme="friends">
@@ -1131,6 +1170,86 @@ const lift=()=>{if(!B.classList.contains('intro'))return;const now=performance.n
 applyLangData();applyStatic();
 app.innerHTML=`<div class="wrap meta mute" style="padding:60px var(--pad)">${T('Loading the archive…','読み込み中…')}</div>`;
 loadGeo().then(()=>{route();lift();}).catch(err=>{console.error(err);route();lift();});
+})();
+</script>
+<script>
+/* ---------- Notifications ---------- */
+(function(){
+const SEEN='cf_welcomed';
+const seen=()=>{try{if(localStorage.getItem(SEEN))return true;}catch(e){}return document.cookie.split('; ').some(c=>c.startsWith(SEEN+'='));};
+const markSeen=()=>{try{localStorage.setItem(SEEN,'1');}catch(e){}document.cookie=SEEN+'=1; max-age=31536000; path=/; SameSite=Lax';};
+const thumb=u=>!u?null:/^(localhost|127\.0\.0\.1)$/.test(location.hostname)||u.startsWith('/assets')?u:'/_vercel/image?url='+encodeURIComponent(u)+'&w=200&q=80';
+const photoOf=f=>{const im=(f&&f.images||[]).find(i=>i.src&&!isVid(i.src));return im?thumb(im.src):null;};
+// circle icon: kind = logo | food | photo; crop = [x, y, size] in % of the photo for a face crop
+const icon=(src,kind,crop)=>{if(!src)return `<span class="ic"></span>`;
+  const st=crop?` style="width:${100/crop[2]*100}%;height:auto;left:${-crop[0]/crop[2]*100}%;top:${-crop[1]/crop[2]*100}%;inset:auto;object-fit:initial;max-width:none"`:'';
+  return `<span class="ic ${kind}"><img src="${src}" alt=""${st}></span>`;};
+const card=(n,tag='button')=>`<${tag} class="nt" ${n.href?`data-href="${n.href}"`:''}>${icon(n.icon,n.kind,n.crop)}<b>${n.title}</b><time>${n.time||T('now','今')}</time><p>${n.body}</p></${tag}>`;
+const go=h=>{if(h)location.hash=h;};
+
+/* First visit: three notifications introducing Cabi & Friends */
+function welcome(){
+  if(seen()||!/^#\/?(directory)?$/.test(location.hash||'#/'))return;
+  const morita=F['morita-shoyu'],guides=new Set(PREFS.flatMap(p=>[...p._spec,...p._seas])).size;
+  const items=[
+    {icon:'/assets/cabi-friends-black.png',kind:'logo',title:'Cabi &amp; Friends',href:'#/about',
+     body:T('Meet the makers keeping Japan’s everyday flavours alive. Our Friends are brewers, farmers and salt makers we know by name, across all 47 prefectures.','日本の毎日の味を守り続ける、つくり手たちに会いに行こう。私たちの友人は、名前で呼び合える蔵元、農家、塩づくりの人たち。47都道府県に広がっています。')},
+    {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Noto fish sauce · Ishikawa','いしる · 石川'),href:'#/pref/ishikawa',time:T('2m ago','2分前'),
+     body:T(`Every region has flavours you won’t find anywhere else. Explore ${guides} regional foods in our guides to all 47 prefectures.`,`土地ごとに、そこでしか出会えない味があります。47都道府県の食ガイドで、${guides}の土地の食べ物をたどってみてください。`)},
+    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[42,14,40],title:T('Morita Shoyu · Shimane','森田醤油店 · 島根'),href:'#/friend/morita-shoyu',time:T('5m ago','5分前'),
+     body:T('Know who made it. Every Friend has a profile, so you can meet the people behind your soy sauce and reach them directly.','誰がつくったかがわかる。友人一人ひとりのプロフィールから、醤油の向こうにいる人に出会い、直接つながることができます。')},
+  ].filter(Boolean);
+  const scrim=document.createElement('div');scrim.className='nc-scrim';
+  const nc=document.createElement('div');nc.className='nc';nc.setAttribute('role','dialog');nc.setAttribute('aria-label',T('Welcome','ようこそ'));
+  nc.innerHTML=`<div class="nc-h"><span>${T('Welcome','ようこそ')}</span><button class="nc-x" aria-label="${T('Close','閉じる')}">×</button></div>`+items.map(n=>card(n)).join('');
+  document.body.append(scrim,nc);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{nc.classList.add('on');scrim.classList.add('on');}));
+  const close=h=>{markSeen();nc.classList.add('out');scrim.classList.remove('on');setTimeout(()=>{nc.remove();scrim.remove();},600);removeEventListener('keydown',esc);window.__ncOpen=false;go(h);ambientSoon(20000);};
+  const esc=e=>{if(e.key==='Escape')close();};
+  window.__ncOpen=true;addEventListener('keydown',esc);
+  nc.querySelector('.nc-x').onclick=()=>close();
+  nc.querySelectorAll('.nt').forEach(b=>b.onclick=()=>close(b.dataset.href));
+}
+
+/* Every minute or two: a new Friend or a regional food guide, in empty header space */
+let pool=[],pi=0,timer=0,hideT=0,el=null;
+function buildPool(){
+  const fr=[...FRIENDS].sort((a,b)=>b.id-a.id).slice(0,8).map(f=>({icon:photoOf(f)||foodUrl(f.tags[0]),kind:photoOf(f)?'photo':'food',href:'#/friend/'+f.slug,
+    title:T('New Friend','新しい友人'),body:`${esc(f.name_en)} · ${P[f.prefecture].name_en}. ${esc((f.description||f.makes||'').split(/(?<=[.。])\s*/)[0])}`}));
+  const gd=PREFS.filter(p=>p._spec.some(s=>foodUrl(s))).sort(()=>Math.random()-.5).slice(0,8).map(p=>{const sp=p._spec.find(s=>foodUrl(s));return {icon:foodUrl(sp),kind:'food',href:'#/pref/'+p.slug,
+    title:T('Food guide','食ガイド')+' · '+p.name_en,body:esc(p.description)};});
+  pool=[];for(let i=0;i<Math.max(fr.length,gd.length);i++){if(gd[i])pool.push(gd[i]);if(fr[i])pool.push(fr[i]);}
+}
+// Find free space in the header: right of the logo on phones, between the logo and the nav on wider screens.
+function spot(){
+  const hd=document.querySelector('body>.hd'),logo=hd&&hd.querySelector('.logo'),nav=hd&&hd.querySelector('.nav');if(!hd||!logo||!nav)return null;
+  const H=hd.getBoundingClientRect(),L=logo.getBoundingClientRect(),N=nav.getBoundingClientRect();
+  if(H.bottom<40)return null; // header scrolled away
+  if(innerWidth<=760){const left=L.right+14,w=H.right-12-left;if(w<190)return null;return {left,top:L.top+scrollY+2,w};}
+  const w=300,right=N.left-28;if(right-(L.right+28)<w)return null;return {left:right-w,top:H.top+scrollY+(H.height-72)/2,w};
+}
+function show(){
+  if(window.__ncOpen||document.body.classList.contains('fopen')||document.hidden)return ambientSoon();
+  if(!pool.length)buildPool();const s=spot();if(!s||!pool.length)return ambientSoon();
+  const n=pool[pi++%pool.length];
+  el?.remove();el=document.createElement('div');el.className='na';el.style.cssText=`left:${s.left}px;top:${s.top}px;width:${s.w}px`;
+  el.innerHTML=card(n,'div')+`<button class="x" aria-label="${T('Close','閉じる')}">×</button>`;
+  document.body.append(el);const me=el;
+  me.querySelector('.nt').onclick=()=>{hide(me,true);go(n.href);};
+  me.querySelector('.x').onclick=e=>{e.stopPropagation();hide(me,true);};
+  me.onmouseenter=()=>clearTimeout(hideT);me.onmouseleave=()=>{hideT=setTimeout(()=>hide(me),2000);};
+  requestAnimationFrame(()=>requestAnimationFrame(()=>me.classList.add('on')));
+  hideT=setTimeout(()=>hide(me),5000);ambientSoon();
+}
+function hide(me,now){clearTimeout(hideT);if(now)me.style.transition='opacity .25s ease';me.classList.remove('on');setTimeout(()=>me.remove(),now?300:1900);}
+function ambientSoon(ms){clearTimeout(timer);timer=setTimeout(show,ms||60000+Math.random()*60000);}
+addEventListener('resize',()=>{if(el&&el.classList.contains('on'))hide(el,true);});
+addEventListener('hashchange',()=>{if(el)hide(el,true);});
+
+// Start once the landing animation has finished
+(function start(){if(document.body.classList.contains('intro'))return setTimeout(start,200);
+  setTimeout(welcome,700);if(seen())ambientSoon(25000);})();
+window.__nt={welcome,show,reset:()=>{try{localStorage.removeItem(SEEN);}catch(e){}document.cookie=SEEN+'=; max-age=0; path=/';}};
 })();
 </script>
 </body>
