@@ -431,7 +431,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .card .thumb .hv{display:none}
  .mapwrap{grid-template-columns:1fr}
  .mapbox{border-right:0;border-bottom:1px solid var(--ink)}
- .panel{max-height:none;padding:20px var(--pad)}
+ .panel{max-height:none;overflow:visible;padding:20px var(--pad)}
+ .panel::after{content:none;display:none}
  .legend{display:none}
  .phead,.pfhead,.pgrid,.pfgrid,.form-wrap,.about{grid-template-columns:1fr;gap:28px}
  .phead h1{font-size:44px}.phead .ja{font-size:22px}
