@@ -379,7 +379,7 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
 .about p{font-size:17px;line-height:1.6;margin:0 0 18px;max-width:56ch}
 .about .pillars{border-top:1px solid var(--ink);margin-top:10px}
 .about .pillars>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:14px 0 12px;border-bottom:1px solid var(--soft)}
-.about .pillars p{margin:0;font-size:14px;text-transform:none}
+.about .pillars p{margin:0;font-size:15px;text-transform:none;letter-spacing:-.01em}
 .about .pillars .meta{padding-top:3px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);margin-top:36px}
 .stats div{padding:14px 0;display:grid;gap:4px}
@@ -998,7 +998,7 @@ function renderAbout(){
         <div><div class="meta">${T('Places','土地')}</div><p>${T('A food guide for all 47 prefectures.','47都道府県すべての食ガイド。')}</p></div>
         <div><div class="meta">${T('Food','食')}</div><p>${T('What grows, gets made and comes into season where, and who is behind it.','どこで何が育ち、つくられ、旬を迎えるのか。そして、その向こうにいる人。')}</p></div>
       </div>
-      <p style="margin-top:28px;text-transform:none;font-size:16px">${T('The network grows as we travel. Cabi &amp; Friends is part of Cabi Foods, and many of the people here are behind what we make.','このつながりは、旅とともに広がっていきます。Cabi &amp; FriendsはCabi Foodsの一部で、ここにいる多くの人が、私たちのつくるものを支えています。')}</p>
+      <p style="margin-top:28px;text-transform:none;letter-spacing:-.01em">${T('The network grows as we travel. Cabi &amp; Friends is part of Cabi Foods, and many of the people here are behind what we make.','このつながりは、旅とともに広がっていきます。Cabi &amp; FriendsはCabi Foodsの一部で、ここにいる多くの人が、私たちのつくるものを支えています。')}</p>
       <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Get featured','掲載の相談')}</a></div>
     </div>
   </section>`;
