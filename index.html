@@ -620,7 +620,7 @@ const tr=s=>LANG==='ja'&&s?((window.JA_TERMS||{})[s]||s):s;
 const fc=n=>LANG==='ja'?`友人 ${n}`:plural(n,'Friend');
 function applyLangData(){const ja=LANG==='ja';
   PREFS.forEach(p=>{p.name_en=ja?p._ja:p._en;p.name_ja=ja?p._en:p._ja;p.description=ja?((window.JA_DESC||{})[p.slug]||p._desc):p._desc;p.specialties=p._spec.map(tr);p.seasonal_foods=p._seas.map(tr);});
-  FRIENDS.forEach(f=>{f.name_en=ja?(f._ja||f._en):f._en;f.name_ja=ja?(f._ja?f._en:''):f._ja;f.makes=tr(f._makes);f.city=tr(f._city);f.description=ja&&f.description_ja?f.description_ja:f._desc;f.story=ja&&f.story_ja.length?f.story_ja:f._story;f.images.forEach(im=>{im.caption=ja&&f._en?im._cap.split(f._en).join(f.name_en):im._cap;});});
+  FRIENDS.forEach(f=>{f.name_en=ja?(f._ja||f._en):f._en;f.name_ja=ja?(f._ja?f._en:''):f._ja;f.makes=(f._makes||'').split(' · ').map(tr).join(' · ');f.city=tr(f._city);f.description=ja&&f.description_ja?f.description_ja:f._desc;f.story=ja&&f.story_ja.length?f.story_ja:f._story;f.images.forEach(im=>{im.caption=ja&&f._en?im._cap.split(f._en).join(f.name_en):im._cap;});});
   buildHay();}
 function applyStatic(){document.documentElement.lang=LANG;document.querySelectorAll('[data-t]').forEach(e=>e.textContent=T(e.dataset.t,e.dataset.ja));document.querySelectorAll('#lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===LANG));}
 
