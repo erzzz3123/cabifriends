@@ -836,7 +836,7 @@ function renderDirectory(list){
    </div>`;}).join('');
   const cards=list.map(f=>{const p=P[f.prefecture],im=f.images[0];return `
    <article class="card" data-slug="${f.slug}" onclick="A.friend('${f.slug}')">
-     <div class="thumb"><span class="no">${f.no}</span>${im.src?media(im.src,esc(im.caption),false,828):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
+     <div class="thumb">${im.src?media(im.src,esc(im.caption),false,828):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
        <div class="hv"><span class="meta" style="opacity:.8">${p.name_ja} · ${coord(f.latitude,f.longitude)}</span><span>${esc(f.makes)}</span></div></div>
      <h2><span class="en">${esc(f.name_en)}</span><span class="ja">${f.name_ja}</span></h2>
      <ul class="ct"><li><button class="pf" onclick="event.stopPropagation();A.tag('place:${p.slug}')">${p.name_en}</button></li>${[f.category,...f.tags].map((t,i)=>`<li><button onclick="event.stopPropagation();A.tag('${i?'food:':'type:'}${esc(t)}')">${esc(tr(t))}</button></li>`).join('')}</ul>
