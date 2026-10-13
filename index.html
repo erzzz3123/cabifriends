@@ -219,18 +219,15 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .dl.has-sel .ent:not(.sel){opacity:.28}
 .dl.has-sel .ent:not(.sel):hover{opacity:1}
 .dp{position:sticky;top:16px;max-height:calc(100vh / .9 - 36px);overflow:auto;scrollbar-width:none;display:grid;gap:10px;align-content:start}
-.dp>*{opacity:0;transition:opacity .9s cubic-bezier(.25,.1,.25,1) .05s}
-.dp.on>*:nth-child(3){transition-delay:.2s}.dp.on>*:nth-child(4){transition-delay:.35s}.dp.on>*:nth-child(n+5){transition-delay:.5s}
+/* panel pictures fade in one by one */
+.dp>*{opacity:0;transition:opacity .8s ease}
+.dp.on>*:nth-child(2){transition-delay:.1s}.dp.on>*:nth-child(3){transition-delay:.45s}.dp.on>*:nth-child(4){transition-delay:.8s}.dp.on>*:nth-child(5){transition-delay:1.15s}.dp.on>*:nth-child(6){transition-delay:1.5s}.dp.on>*:nth-child(n+7){transition-delay:1.85s}
 .dp.on>*{opacity:1}
 .dp.out>*{opacity:0;transition:opacity .25s ease}
 .dp-h{display:flex;justify-content:space-between;gap:16px;align-items:baseline;font-size:13px;line-height:1.38;padding-bottom:8px;position:sticky;top:0;z-index:3;background:#fff}
 .dp-h .a{display:flex;gap:18px;flex:none}
 .dp-im{display:block}
 .dp-im>img,.dp-im>video{width:100%;height:auto;display:block;margin:0 auto}
-/* each picture in the panel fades in from the top down as it arrives */
-.dp-im>img.ld,.dp-im>video{-webkit-mask-image:linear-gradient(#000 40%,transparent 60%);mask-image:linear-gradient(#000 40%,transparent 60%);-webkit-mask-size:100% 250%;mask-size:100% 250%;animation:dpWipe 1.2s cubic-bezier(.3,.1,.25,1) both}
-.dp-f:nth-child(3) .dp-im>*{animation-delay:.15s}.dp-f:nth-child(4) .dp-im>*{animation-delay:.3s}.dp-f:nth-child(n+5) .dp-im>*{animation-delay:.45s}
-@keyframes dpWipe{from{-webkit-mask-position:0 100%;mask-position:0 100%}to{-webkit-mask-position:0 0;mask-position:0 0}}
 .dp-im>.dp-ph{width:100%;aspect-ratio:4/3;margin:0 auto}
 .dp-ph{background:rgba(67,47,41,.12);color:var(--ink);display:flex !important;flex-direction:column;justify-content:space-between;padding:12px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .fly{position:fixed;z-index:60;pointer-events:none;margin:0}
