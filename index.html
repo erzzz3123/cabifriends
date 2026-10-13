@@ -82,11 +82,11 @@ button{font:inherit;color:inherit}
 .nav a[data-r].on::before{content:"[•] "}
 .nav .sep{width:1px;height:14px;background:var(--soft)}
 
-/* intro */
-.intro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;padding-top:32px;padding-bottom:24px;align-items:end}
-.intro h1{margin:0;font-weight:300;font-size:46px;line-height:1.08;letter-spacing:-.02em;max-width:22ch;text-wrap:balance}
-.intro aside{display:grid;gap:10px;padding-bottom:6px}
-.intro aside .jp{font-size:14px}
+/* intro section (scoped so it never applies to body.intro, the landing state) */
+section.intro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;padding-top:32px;padding-bottom:24px;align-items:end}
+section.intro h1{margin:0;font-weight:300;font-size:46px;line-height:1.08;letter-spacing:-.02em;max-width:22ch;text-wrap:balance}
+section.intro aside{display:grid;gap:10px;padding-bottom:6px}
+section.intro aside .jp{font-size:14px}
 
 /* search + controls */
 .search{display:flex;align-items:center;gap:16px;flex:1;min-width:240px;position:relative}
@@ -427,8 +427,8 @@ html[lang="ja"] .panel::after{content:"↓  スクロール"}
  .nav{gap:18px;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none}
  .nav::-webkit-scrollbar{display:none}
  .nav a{white-space:nowrap}
- .intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
- .intro h1{font-size:36px}
+ section.intro{grid-template-columns:1fr;padding-top:24px;gap:16px}
+ section.intro h1{font-size:36px}
  .hi-grid{grid-template-columns:1fr;gap:14px;padding:30px 0 24px}
  .hi h1{font-size:32px}
  .search input{font-size:20px;padding:12px 0}
