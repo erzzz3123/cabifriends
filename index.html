@@ -288,7 +288,8 @@ figcaption{display:flex;justify-content:space-between;gap:12px;padding-top:8px;f
 .dot{cursor:pointer}
 .dot circle{fill:var(--ink);stroke:var(--bone);stroke-width:1.5;r:4.5px;transition:r .15s,opacity .15s}
 .dot:hover circle{r:8px}
-.dot.insel circle{fill:var(--bone);stroke:var(--ink)}
+.dot circle.hit,.dot:hover circle.hit{r:12px;fill:transparent;stroke:none}
+.dot.insel circle:not(.hit){fill:var(--bone);stroke:var(--ink)}
 .dot.off{opacity:.12;pointer-events:none}
 .legend{position:absolute;left:16px;bottom:14px;display:grid;gap:6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:var(--bone);padding:8px 10px;border:1px solid var(--soft)}
 .legend span{display:flex;align-items:center;gap:8px}
@@ -898,7 +899,6 @@ function renderMap(list){
   if(!mapBuilt){
     $('#results').innerHTML=`<div class="mapwrap"><div class="mapbox" id="mapbox">
       <div class="maptools"><button class="btn ghost" style="padding:6px 10px;font-size:11px" onclick="A.randomPref()">${T('Random prefecture','ランダムな都道府県')}</button></div>
-      <div class="legend"><span><i style="background:var(--cf-bone)"></i>${T('Prefecture','都道府県')}</span><span><i style="background:rgba(67,47,41,.13)"></i>${T('Has Friends','友人がいる')}</span><span><i style="background:rgba(67,47,41,.34)"></i>${T('Known for your search','検索に該当する名産')}</span><span><svg width="12" height="12"><circle cx="6" cy="6" r="4" fill="#432F29"/></svg>${T('Friend','友人')}</span></div>
     </div><div class="panel" id="panel"></div></div>`;
     buildMap();
   }
@@ -933,6 +933,7 @@ function buildMap(){
     .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?media(im.src,'',false,384):`<span></span>`).join('')}</div>`))
     .on('mousemove',tipMove).on('mouseleave',tipHide)
     .on('click',(e,f)=>{tipHide();A.friend(f.slug);});
+  dots.append('circle').attr('class','hit'); // larger invisible hover/tap area
   dots.append('circle');
   mapSel={paths,dots};mapBuilt=true;
 }
