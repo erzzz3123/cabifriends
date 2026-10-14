@@ -250,6 +250,9 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .dp figcaption{padding-top:6px;text-align:center}
 .dp-d{font-size:13px;line-height:1.5;margin:6px 0 24px;max-width:56ch}
 body{transition:background-color .55s cubic-bezier(.25,.1,.25,1)}
+#root.pg-in{-webkit-mask-image:linear-gradient(135deg,#000 40%,transparent 60%);mask-image:linear-gradient(135deg,#000 40%,transparent 60%);-webkit-mask-size:300% 300%;mask-size:300% 300%;animation:pgIn 1s cubic-bezier(.3,.1,.25,1) both}
+@keyframes pgIn{from{-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.4}to{-webkit-mask-position:0 0;mask-position:0 0;opacity:1}}
+@media (prefers-reduced-motion:reduce){#root.pg-in{animation:none;-webkit-mask-image:none;mask-image:none}}
 html body.intro{background:#fff}
 body.intro #root,body.intro footer,body.intro .dp,body.intro .ex-row,body.intro .ex-meta{visibility:hidden}
 body.intro .util,body.intro .hd>:not(.logo){visibility:hidden}
@@ -1187,10 +1190,15 @@ window.A={
 };
 
 /* ---------- router ---------- */
+/* Every page arrives with a soft diagonal fade, top left to bottom right (not when moving around inside the map) */
+let lastPage='';
+function pageIn(key){if(key===lastPage)return;lastPage=key;app.classList.remove('pg-in');void app.offsetWidth;app.classList.add('pg-in');
+  clearTimeout(pageIn.t);pageIn.t=setTimeout(()=>app.classList.remove('pg-in'),1100);}
 function route(){
   const [path,qs]=location.hash.replace(/^#\/?/,'').split('?');
   const parts=path.split('/').filter(Boolean).map(decodeURIComponent);const params=new URLSearchParams(qs||'');
   const r=parts[0]||'directory';
+  pageIn(r==='map'?'map':r+'/'+(parts[1]||''));
   navMark(r);
   document.body.classList.toggle('r-about',r==='about');
   peek.style.display='none';tipHide();
