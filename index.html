@@ -248,7 +248,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .dp-ph{background:rgba(67,47,41,.12);color:var(--ink);display:flex !important;flex-direction:column;justify-content:space-between;padding:12px;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .fly{position:fixed;z-index:60;pointer-events:none;margin:0}
 .dp figcaption{padding-top:6px;text-align:center}
-.dp-d{font-size:13px;line-height:1.5;margin:6px 0 24px;max-width:56ch}
+.dp-d{font-size:13px;line-height:1.5;margin:-4px 0 8px;max-width:56ch}
 body{transition:background-color .55s cubic-bezier(.25,.1,.25,1)}
 #root.pg-in{-webkit-mask-image:linear-gradient(135deg,#000 40%,transparent 60%);mask-image:linear-gradient(135deg,#000 40%,transparent 60%);-webkit-mask-size:300% 300%;mask-size:300% 300%;animation:pgIn 1s cubic-bezier(.3,.1,.25,1) both}
 @keyframes pgIn{from{-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.4}to{-webkit-mask-position:0 0;mask-position:0 0;opacity:1}}
@@ -835,8 +835,8 @@ const desk=()=>matchMedia('(min-width:761px)').matches;
 function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src,'',false,384):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
-  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}
-  <p class="dp-d" style="text-transform:none">${esc(f.description)}</p>`;}
+  ${f.description?`<p class="dp-d" style="text-transform:none">${esc(f.description)}</p>`:''}
+  ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}`;}
 function renderDirectory(list){
   mapBuilt=false;
   const kp=knownPrefs(knownTerms());
