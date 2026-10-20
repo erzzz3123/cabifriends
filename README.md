@@ -4,7 +4,7 @@ Directory of the people, producers and places Cabi works with across Japan. Inte
 
 ## How it fits together
 - **GitHub** stores this code. Every push to `main` redeploys on Vercel; pull requests get preview URLs.
-- **Vercel** hosts the static site (`index.html`, `admin.html`) and the serverless API in `/api`. No build step.
+- **Vercel** hosts the site (`app.html` served through `api/page.js` with per-page SEO, `admin.html`) and the serverless API in `/api`. No build step.
 - **Airtable** is the source of truth for producer information. It's copied into Supabase every hour.
 - **Dropbox** holds the producer photo folders. An hourly Supabase Edge Function copies them into Supabase Storage
   and writes their public URLs back to Airtable ("Image URLs").
@@ -14,7 +14,7 @@ Directory of the people, producers and places Cabi works with across Japan. Inte
 ```
 Dropbox app folder ──(:05 hourly, Edge Function dropbox-sync)──▶ Storage `producer_images` ──URLs──▶ Airtable "Image URLs"
 Airtable ──(every 15 min, Edge Function airtable-sync)──▶ Supabase `friends` + `friend_images`
-visitor ──▶ index.html ──▶ /api/data ──(anon key, RLS: published only)──▶ Supabase
+visitor ──▶ /api/page (app.html + SEO) ──▶ /api/data ──(anon key, RLS: published only)──▶ Supabase
 visitor ──▶ Submit form ──▶ /api/submit ──(service key)──▶ submissions table
                      └──── photos PUT straight to the private `submissions` bucket (signed URLs)
 staff  ──▶ /admin (magic-link sign-in) ──▶ /api/admin ──▶ approve → producer row + photos copied to public `friends` bucket
@@ -24,7 +24,8 @@ The page loads live data from `/api/data`. If that fails it falls back to the bu
 
 | Path | What it is |
 |---|---|
-| `index.html` | The whole public site (Directory, Map, Profile, About, Submit) |
+| `app.html` | The whole public site (Directory, Map, Profile, Prefecture, About, Get in touch). Real URLs: `/friend/:slug`, `/pref/:slug`, `?lang=ja` for Japanese |
+| `api/page.js`, `lib/seo.js` | Per-page titles, descriptions, hreflang, Open Graph, JSON-LD, Google Analytics (`GA_MEASUREMENT_ID`) and server-rendered text; `/sitemap.xml` from `api/sitemap.js` |
 | `admin.html` | Staff review screen at `/admin` |
 | `api/data.js` | Published producers + prefectures as `window.FRIENDS` / `window.PREFS` (60 s CDN cache) |
 | `api/submit.js` | Submit a Producer: validation, rate limit, signed photo uploads |

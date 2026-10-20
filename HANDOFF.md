@@ -4,7 +4,7 @@
 Cabi & Friends (friends.cabifoods.com) is a curated directory of the people, producers, farmers, restaurants, shops and makers Cabi Foods works with across Japan. Two views share one dataset: a dense editorial **Directory** and a **Map** of all 47 prefectures. Each Friend has a profile page. The whole interface switches between English and Japanese.
 
 ## About the design files
-`index.html` is a working **high-fidelity prototype** in vanilla HTML/CSS/JS. It is already wired to the Vercel API and can ship as-is. If you move it into a framework (React/Next, Astro, etc.), recreate it pixel-for-pixel using that framework's patterns; treat `index.html` as the source of truth for look and behaviour.
+`app.html` (formerly `index.html`) is a working **high-fidelity prototype** in vanilla HTML/CSS/JS. It is already wired to the Vercel API and can ship as-is. If you move it into a framework (React/Next, Astro, etc.), recreate it pixel-for-pixel using that framework's patterns; treat `app.html` as the source of truth for look and behaviour.
 
 ## Fidelity
 High-fidelity. Final colours, type, spacing and interactions.

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--seo: replaced per page by api/page.js (titles, descriptions, canonical, hreflang, Open Graph, JSON-LD, analytics)-->
 <title>Cabi &amp; Friends · People, places &amp; food we love across Japan</title>
 <meta name="description" content="Meet the makers keeping Japan's everyday flavours alive. A directory of the producers, farmers and makers Cabi knows by name, with food guides to all 47 prefectures.">
 <link rel="icon" type="image/png" href="/assets/favicon.png">
@@ -20,6 +21,8 @@
 <meta name="twitter:title" content="Cabi &amp; Friends">
 <meta name="twitter:description" content="Meet the makers keeping Japan's everyday flavours alive.">
 <meta name="twitter:image" content="https://cabifriends.vercel.app/assets/og-social.jpg">
+<!--/seo-->
+<script>document.documentElement.classList.add('js')</script>
 <link rel="stylesheet" href="/_ds/tokens/fonts.css">
 <link rel="stylesheet" href="/_ds/tokens/colors.css">
 <link rel="stylesheet" href="/_ds/tokens/typography.css">
@@ -589,24 +592,30 @@ body.r-about>.ft{display:none}
  .na b{font-size:11px}.na time{font-size:10px}.na p{font-size:11px;line-height:1.28}
 }
 @media (prefers-reduced-motion:reduce){.nc .nt,.na{transition:opacity .3s ease}}
+/* server-rendered page text: read by search engines and no-JS visitors, replaced by the app */
+.js .ssr{display:none}
+.ssr{padding:40px var(--pad);max-width:900px;text-transform:none}
+.ssr h1{font-weight:300;font-size:40px;line-height:1.1;margin:0 0 16px}
+.ssr h2{font-weight:300;font-size:22px;margin:32px 0 10px}
+.ssr li{margin:4px 0}
 </style>
 </head>
 <body data-theme="friends">
-<script>window.__t0=performance.now();if(/^#\/?(directory)?$/.test(location.hash||'#/')){document.body.classList.add('intro');setTimeout(()=>{document.body.classList.add('i1');window.__t1=performance.now();},500);}</script>
+<script>window.__t0=performance.now();if(location.hash.startsWith('#/'))history.replaceState(null,'',location.hash.slice(1)+(location.hash.includes('?')?'':location.search));if(/^\/(directory\/?)?$/.test(location.pathname)){document.body.classList.add('intro');setTimeout(()=>{document.body.classList.add('i1');window.__t1=performance.now();},500);}</script>
 <div class="util">
   <div class="tabs">
     <a href="https://cabifoods.com" target="_blank" rel="noopener">Cabi Foods ↗</a>
-    <a href="#/directory" class="on">Cabi &amp; Friends</a>
+    <a href="/directory" class="on">Cabi &amp; Friends</a>
   </div>
   <div class="lang" id="lang"><button data-l="en" onclick="A.lang('en')">EN</button><span>/</span><button data-l="ja" onclick="A.lang('ja')">日本語</button></div>
 </div>
 <header class="hd wrap" style="height: 100px">
-  <a class="logo" href="#/directory" aria-label="Cabi &amp; Friends"></a>
+  <a class="logo" href="/directory" aria-label="Cabi &amp; Friends"></a>
   <nav class="nav" id="nav">
-    <a href="#/directory" data-r="directory" data-t="Directory" data-ja="一覧">Directory</a>
-    <a href="#/map" data-r="map" data-t="Map" data-ja="地図">Map</a>
-    <a href="#/about" data-r="about" data-t="About" data-ja="概要">About</a>
-    <a href="#/submit" data-r="submit" data-t="Get in touch" data-ja="お問い合わせ">Get in touch</a>
+    <a href="/directory" data-r="directory" data-t="Directory" data-ja="一覧">Directory</a>
+    <a href="/map" data-r="map" data-t="Map" data-ja="地図">Map</a>
+    <a href="/about" data-r="about" data-t="About" data-ja="概要">About</a>
+    <a href="/submit" data-r="submit" data-t="Get in touch" data-ja="お問い合わせ">Get in touch</a>
     <span class="sep"></span>
     <a href="https://cabifoods.com" target="_blank" rel="noopener">Cabi Foods ↗</a>
   </nav>
@@ -633,7 +642,7 @@ const isVid=s=>/\.(mp4|m4v|webm|mov)(\?|#|$)/i.test(s||'');
 // Videos sit in the same slots as photos: large views loop silently like a moving photo, small ones show the first frame.
 // Photos are served by Vercel at the size they're shown (WebP, transparency kept); not on localhost. Falls back to the original.
 const LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-const opt=(src,w)=>{if(!src||LOCAL||isVid(src))return src;const u=src.startsWith('assets/')?'/'+src:src;
+const opt=(src,w)=>{if(!src)return src;const u=src.startsWith('assets/')?'/'+src:src;if(LOCAL||isVid(src))return u;
   return /^(\/assets\/|https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\/)/.test(u)?'/_vercel/image?url='+encodeURIComponent(u)+'&w='+w+'&q=78':src;};
 document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=decodeURIComponent(m[1]);},true);
 const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
@@ -649,7 +658,10 @@ const PLACES=PREFS.filter(p=>p.friends.length);
 const coord=(la,lo)=>`${Math.abs(la).toFixed(2)}°N ${Math.abs(lo).toFixed(2)}°E`;
 const plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
 const hoverable=matchMedia('(hover:hover)').matches;
-let LANG=localStorage.getItem('cf_lang')==='ja'?'ja':'en';
+// ?lang=ja / ?lang=en in the address wins (shareable, and what search engines see); otherwise the visitor's last choice
+const qLang=new URLSearchParams(location.search).get('lang');
+let LANG=qLang==='ja'||qLang==='en'?qLang:(localStorage.getItem('cf_lang')==='ja'?'ja':'en');
+if(qLang==='ja'||qLang==='en')try{localStorage.setItem('cf_lang',qLang);}catch(e){}
 const T=(en,ja)=>LANG==='ja'?ja:en;
 const tr=s=>LANG==='ja'&&s?((window.JA_TERMS||{})[s]||s):s;
 const fc=n=>LANG==='ja'?`友人 ${n}`:plural(n,'Friend');
@@ -689,7 +701,7 @@ let GEO=null;
 const MAIN={type:'MultiPoint',coordinates:[[128.4,30.7],[146.0,45.6]]};
 const OKI={type:'MultiPoint',coordinates:[[122.9,24.0],[128.4,27.0]]};
 async function loadGeo(){
-  const t=window.JAPAN_TOPO||await (await fetch('assets/japan.topojson')).json();const obj=t.objects.japan;
+  const t=window.JAPAN_TOPO||await (await fetch('/assets/japan.topojson')).json();const obj=t.objects.japan;
   const fc=topojson.feature(t,obj);
   fc.features.forEach(ft=>{const p=PREFS[ft.properties.id-1];p.feature=ft;const c=d3.geoCentroid(ft);p.coordinates=[+c[1].toFixed(2),+c[0].toFixed(2)];});
   const nb=topojson.neighbors(obj.geometries);
@@ -733,7 +745,7 @@ function mountExplore(){
       <div class="hi-body" id="hi-body"><div class="hi-in"><div class="hi-grid">
         <h1>${T('Meet the makers keeping Japan’s everyday flavours alive.','日本の毎日の味を守り続ける、つくり手たちへ。')}</h1>
         <div><p>${T('A directory of the people and places behind the food we love: brewers, farmers, salt makers and foragers we know by name, across all 47 prefectures. Search by place or ingredient, or follow the map from region to region.','私たちが愛する食べ物の向こうにいる人と土地のディレクトリ。名前で呼び合える蔵元、農家、塩づくり、山の草木を採る人たちが、47都道府県に広がっています。場所や食材から探したり、地図で地域をたどったりしてみてください。')}</p>
-        <a class="hi-more" href="#/about">${T('More about the project →','プロジェクトについて →')}</a></div>
+        <a class="hi-more" href="/about">${T('More about the project →','プロジェクトについて →')}</a></div>
       </div></div></div>
     </div>
     <div class="ex-row">
@@ -773,7 +785,7 @@ function mountExplore(){
 /* Homepage intro: open on arrival; closing it is remembered for the rest of the visit */
 let introArrived=false; // the unfold plays once per page load
 const introShut=()=>{try{return sessionStorage.getItem('cf_intro')==='shut';}catch(e){return false;}};
-const onHome=()=>/^#\/?(directory)?$/.test(location.hash||'#/');
+const onHome=()=>/^\/(directory\/?)?$/.test(location.pathname);
 function navMark(r){const intro=r==='directory'&&onHome()&&!introShut();
   document.querySelectorAll('#nav a[data-r]').forEach(a=>a.classList.toggle('on',intro?a.dataset.r==='about':a.dataset.r===r));}
 // Scrolling down on the homepage folds the intro away (the directory takes over)
@@ -796,7 +808,7 @@ setInterval(()=>{const h=$('#qhint');if(!h||$('#q').value)return;const sp=h.firs
 function placeTags(){const t=$('#tags'),box=$('#fptags');if(!t||!box)return;
   if(desk()){if(t.parentNode===box)$('.ex-row').after(t);}else if(t.parentNode!==box)box.append(t);}
 matchMedia('(min-width:761px)').addEventListener('change',()=>{placeTags();if(desk())A.fpanel(false);});
-addEventListener('hashchange',()=>document.body.classList.remove('fopen'));
+addEventListener('routechange',()=>document.body.classList.remove('fopen'));
 function renderTags(){
   const btn=(k,label,n,extra='')=>`<button class="tag" data-tag="${k}" onclick="A.tag('${k}')" onmouseenter="A.pv('${k}')" onmouseleave="A.pv(null)">${label}${extra}<i>${n}</i></button>`;
   const cnt=k=>FRIENDS.filter(f=>hasTag(f,k)).length;
@@ -834,7 +846,7 @@ const RAT=['4/5','3/2','1/1'],TONE=['rgba(67,47,41,.30)','rgba(67,47,41,.16)','r
 const desk=()=>matchMedia('(min-width:761px)').matches;
 function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src,'',false,384):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
-  return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="#/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
+  return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
   ${f.description?`<p class="dp-d" style="text-transform:none">${esc(f.description)}</p>`:''}
   ${ims.map((im,k)=>`<figure class="dp-f${k?'':' first'}"><div class="dp-im">${im.src?media(im.src,esc(im.caption),true):`<div class="dp-ph"><span>${T('[ Photo ]','[ 写真 ]')}</span><span>${esc(im.caption)}</span></div>`}</div></figure>`).join('')}`;}
 function renderDirectory(list){
@@ -863,10 +875,10 @@ function renderDirectory(list){
      <ul class="ct"><li><button class="pf" onclick="event.stopPropagation();A.tag('place:${p.slug}')">${p.name_en}</button></li>${[f.category,...f.tags].map((t,i)=>`<li><button onclick="event.stopPropagation();A.tag('${i?'food:':'type:'}${esc(t)}')">${esc(tr(t))}</button></li>`).join('')}</ul>
    </article>`;}).join('');
   const terms=knownTerms();
-  const also=kp.length?`<div class="also"><div class="meta">${T('Prefectures known for','名産として知られる都道府県')}<br><span style="text-transform:none;font-size:13px;letter-spacing:0">“${esc(terms.join(' + '))}”</span></div><div class="pl2">${kp.map(({p,hit})=>`<a href="#/pref/${p.slug}">${p.name_en} ${p.name_ja} <span class="mute">— ${esc(hit)}</span></a>`).join('')}</div></div>`:'';
+  const also=kp.length?`<div class="also"><div class="meta">${T('Prefectures known for','名産として知られる都道府県')}<br><span style="text-transform:none;font-size:13px;letter-spacing:0">“${esc(terms.join(' + '))}”</span></div><div class="pl2">${kp.map(({p,hit})=>`<a href="/pref/${p.slug}">${p.name_en} ${p.name_ja} <span class="mute">— ${esc(hit)}</span></a>`).join('')}</div></div>`:'';
   $('#results').innerHTML=`<div class="wrap">
     ${state.layout==='grid'?(list.length?`<div class="grid">${cards}</div>`:''):(list.length?`<div class="dl-wrap"><div class="dl${state.open&&list.some(f=>f.slug===state.open)?' has-sel':''}" id="dl" onclick="if(event.target===this||event.target.classList.contains('dl-grid'))A.closeFig()"><div class="dl-grid">${ents}</div></div><aside class="dp" id="dp"></aside></div>`:'')}
-    ${list.length?'':`<div class="empty"><p>${T('No Friends match that yet','該当する友人はまだいません')}${kp.length?T(', but these prefectures are known for it.','。以下の都道府県の名産です。'):T('.','。')}</p><div class="ctrls"><button class="btn ghost" onclick="A.clearAll()">${T('Clear filters','絞り込みをクリア')}</button><a class="btn ghost" href="#/submit">${T('Know someone? Get in touch','心当たりがあれば、お問い合わせへ')}</a></div></div>`}
+    ${list.length?'':`<div class="empty"><p>${T('No Friends match that yet','該当する友人はまだいません')}${kp.length?T(', but these prefectures are known for it.','。以下の都道府県の名産です。'):T('.','。')}</p><div class="ctrls"><button class="btn ghost" onclick="A.clearAll()">${T('Clear filters','絞り込みをクリア')}</button><a class="btn ghost" href="/submit">${T('Know someone? Get in touch','心当たりがあれば、お問い合わせへ')}</a></div></div>`}
     ${also}
     <div style="height:48px"></div></div>`;
   if(state.layout==='list'&&state.open&&F[state.open]&&list.includes(F[state.open])&&desk()){const dp=$('#dp');dp.innerHTML=panelHTML(F[state.open],state.openI||0);dp.classList.add('on');}else if(state.layout==='list')state.open=null;
@@ -945,7 +957,7 @@ function renderPanel(list,kp){
      <div class="meta mute" style="display:flex;justify-content:space-between"><span>${T('Pref. ','No. ')}${String(p.id).padStart(2,'0')} · ${tr(p.region)}</span><button class="lnk meta" onclick="A.mapPref(null)">${T('Close ×','閉じる ×')}</button></div>
      <h2 style="margin-top:14px">${p.name_en}<span class="ja">${p.name_ja}</span></h2>
      <p style="font-size:14px;margin:16px 0 0;text-transform:none">${esc(p.description)}</p>
-     <div class="ctas" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:18px"><a class="btn" href="#/pref/${p.slug}">${T(p.name_en+' food guide →',p.name_en+'の食ガイド →')}</a>${fr.length?'':`<a class="ui" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a>`}</div>
+     <div class="ctas" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:18px"><a class="btn" href="/pref/${p.slug}">${T(p.name_en+' food guide →',p.name_en+'の食ガイド →')}</a>${fr.length?'':`<a class="ui" href="/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a>`}</div>
      <div class="plbl meta"><span>${T('Known for','名産')}</span></div>
      <div class="known-list">${p.specialties.map(s=>`<button class="tag" onclick="A.term('${esc(s)}')">${esc(s)}</button>`).join('')}</div>
      <div class="plbl meta"><span>${T('In season','旬')}</span></div>
@@ -984,11 +996,11 @@ function renderFriend(slug){
   app.innerHTML=`
   <section class="fp wrap">
     <aside class="fp-info">
-      <a class="ui" href="#/directory">${T('← Back to Directory','← 一覧に戻る')}</a>
+      <a class="ui" href="/directory">${T('← Back to Directory','← 一覧に戻る')}</a>
       <h1>${esc(f.name_en)}<span class="ja">${f.name_ja}</span></h1>
       <div class="fp-sec"><h2>${T('Information','基本情報')}</h2><dl class="kv">
         <dt>${T('Category:','種類：')}</dt><dd><button class="lnk" onclick="A.tag('type:${f.category}')">${tr(f.category)}</button></dd>
-        <dt>${T('Location:','所在地：')}</dt><dd>${f.city?esc(f.city)+', ':''}<a href="#/pref/${p.slug}">${p.name_en} ${p.name_ja}</a></dd>
+        <dt>${T('Location:','所在地：')}</dt><dd>${f.city?esc(f.city)+', ':''}<a href="/pref/${p.slug}">${p.name_en} ${p.name_ja}</a></dd>
         ${f.makes?`<dt>${T('Makes:','つくっているもの：')}</dt><dd>${esc(f.makes)}</dd>`:''}
         ${f.maker?`<dt>${T('Maker:','つくり手：')}</dt><dd>${esc(f.maker)}</dd>`:''}${f.since?`<dt>${T('Friend since:','友人になった年：')}</dt><dd>${f.since}</dd>`:''}
         ${f.website?`<dt>${T('Website:','ウェブサイト：')}</dt><dd><a href="https://${esc(f.website)}" target="_blank" rel="noopener">${esc(f.website)} ↗</a></dd>`:''}
@@ -1002,7 +1014,7 @@ function renderFriend(slug){
         <dt>${T('Methods:','製法：')}</dt><dd>${f.methods.map(esc).join('<br>')}</dd>
       </dl></div>`:''}
       <div class="fp-sec"><h2>${T('Tags','タグ')}</h2><div class="tlist" style="flex-wrap:wrap">${[f.category,...f.tags].map((t,i)=>`<button class="tag" onclick="A.tag('${i?'food:':'type:'}${esc(t)}')">${esc(tr(t))}</button>`).join('')}<button class="tag" onclick="A.tag('place:${p.slug}')">${p.name_en}</button></div></div>
-      <div class="fp-sec"><h2>${T('Location','所在地')}</h2><a href="#/map/${p.slug}" class="locator" style="display:block;border-radius:10px;overflow:hidden;max-width:300px">${miniMap(300,260,{hl:p.slug,pts:[f]})}</a><dl class="kv" style="margin-top:10px"><dt>${T('Coordinates:','座標：')}</dt><dd>${coord(f.latitude,f.longitude)}</dd></dl></div>
+      <div class="fp-sec"><h2>${T('Location','所在地')}</h2><a href="/map/${p.slug}" class="locator" style="display:block;border-radius:10px;overflow:hidden;max-width:300px">${miniMap(300,260,{hl:p.slug,pts:[f]})}</a><dl class="kv" style="margin-top:10px"><dt>${T('Coordinates:','座標：')}</dt><dd>${coord(f.latitude,f.longitude)}</dd></dl></div>
     </aside>
     <div class="fp-figs">
       ${(()=>{const im=f.images,fig=(x,n,r)=>`<figure>${photo(x,r)}</figure>`;
@@ -1011,14 +1023,14 @@ function renderFriend(slug){
   </section>
   <section class="wrap">
     <div class="meta" style="margin-bottom:10px">${T('Keep wandering','さらに巡る')}</div>
-    <div class="path"><span>${esc(f.name_en)}</span><span class="ar">→</span><a href="#/pref/${p.slug}">${p.name_en}</a><span class="ar">→</span><button class="lnk" style="font-size:inherit" onclick="A.tag('food:${esc(tag)}')">${esc(tr(tag))}</button>${next?`<span class="ar">→</span><a href="#/friend/${next.slug}">${esc(next.name_en)}</a>`:''}</div>
+    <div class="path"><span>${esc(f.name_en)}</span><span class="ar">→</span><a href="/pref/${p.slug}">${p.name_en}</a><span class="ar">→</span><button class="lnk" style="font-size:inherit" onclick="A.tag('food:${esc(tag)}')">${esc(tr(tag))}</button>${next?`<span class="ar">→</span><a href="/friend/${next.slug}">${esc(next.name_en)}</a>`:''}</div>
     <div class="wander">
-      <div><h4 class="meta">${T('Place','場所')}</h4><a href="#/pref/${p.slug}" style="display:block;font-size:28px;font-weight:300;text-transform:uppercase">${p.name_en} <span style="text-transform:none">${p.name_ja}</span></a><p style="font-size:14px;margin:8px 0 12px">${esc(p.description)}</p><div class="known-list">${p.specialties.map((s,i)=>{const im=foodUrl(p._spec[i]);return `<button class="tag" onclick="A.term('${esc(s)}')">${im?`<img class="pimg" src="${im}" alt="">`:''}${esc(s)}</button>`;}).join('')}</div></div>
+      <div><h4 class="meta">${T('Place','場所')}</h4><a href="/pref/${p.slug}" style="display:block;font-size:28px;font-weight:300;text-transform:uppercase">${p.name_en} <span style="text-transform:none">${p.name_ja}</span></a><p style="font-size:14px;margin:8px 0 12px">${esc(p.description)}</p><div class="known-list">${p.specialties.map((s,i)=>{const im=foodUrl(p._spec[i]);return `<button class="tag" onclick="A.term('${esc(s)}')">${im?`<img class="pimg" src="${im}" alt="">`:''}${esc(s)}</button>`;}).join('')}</div></div>
       <div><h4 class="meta">${T('Food','食')}</h4><div class="big-links">${ings.map(t=>{const n=friendsWith(t),k=knownPrefs([t]).length;return `<button onclick="A.term('${esc(t)}')"><span>${esc(tr(t))}</span><i>${fc(n)}${k?` · ${k}${T(' pref.','都道府県')}`:''}</i></button>`;}).join('')}</div></div>
       <div><h4 class="meta">${T('Related Friends','関連する友人')}</h4>${rel.map(miniRow).join('')}</div>
     </div>
   </section>
-  <div class="pager wrap ui"><a href="#/friend/${prev.slug}">← ${esc(prev.name_en)}</a><button class="lnk ui" onclick="A.random()">${T('Random Friend ↝','ランダムな友人 ↝')}</button><a href="#/friend/${nxt.slug}">${esc(nxt.name_en)} →</a></div>`;
+  <div class="pager wrap ui"><a href="/friend/${prev.slug}">← ${esc(prev.name_en)}</a><button class="lnk ui" onclick="A.random()">${T('Random Friend ↝','ランダムな友人 ↝')}</button><a href="/friend/${nxt.slug}">${esc(nxt.name_en)} →</a></div>`;
 }
 
 /* ---------- prefecture guide ---------- */
@@ -1027,14 +1039,14 @@ function renderPref(slug){
   const fr=p.friends.map(s=>F[s]);
   const share=PREFS.filter(o=>o!==p&&o.specialties.some(s=>p.specialties.includes(s))).slice(0,8);
   app.innerHTML=`
-  <div class="crumbs wrap"><a href="#/map">${T('Map','地図')}</a><span>/</span><span>${tr(p.region)}</span><span>/</span><span style="color:var(--ink)">${p.name_en}</span></div>
+  <div class="crumbs wrap"><a href="/map">${T('Map','地図')}</a><span>/</span><span>${tr(p.region)}</span><span>/</span><span style="color:var(--ink)">${p.name_en}</span></div>
   <section class="pfhead wrap" style="padding-top:12px">
     <div>
       <div class="meta mute" style="margin-bottom:18px">${T('Pref. '+String(p.id).padStart(2,'0')+' of 47','47都道府県中 '+String(p.id).padStart(2,'0'))} · ${tr(p.region)} · ${p.coordinates?coord(p.coordinates[0],p.coordinates[1]):''} · ${fc(fr.length)}</div>
       <h1>${p.name_en}<span class="ja">${p.name_ja}</span></h1>
-      <p class="desc" style="text-transform:none">${esc(p.description)}</p>${fr.length?'':`<div style="margin-top:22px"><a class="btn ghost" href="#/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a></div>`}
+      <p class="desc" style="text-transform:none">${esc(p.description)}</p>${fr.length?'':`<div style="margin-top:22px"><a class="btn ghost" href="/submit?pref=${p.slug}">${T('Know someone in '+p.name_en+'? →',p.name_en+'に心当たりはありますか？ →')}</a></div>`}
     </div>
-    <div><a href="#/map/${p.slug}" class="locator" style="display:block">${miniMap(380,380,{hl:p.slug,pts:fr})}</a><div class="meta mute" style="margin-top:8px;display:flex;justify-content:space-between"><span>${T(p.name_en+' in Japan','日本の中の'+p.name_en)}</span><a href="#/map/${p.slug}">${T('Open map →','地図を開く →')}</a></div></div>
+    <div><a href="/map/${p.slug}" class="locator" style="display:block">${miniMap(380,380,{hl:p.slug,pts:fr})}</a><div class="meta mute" style="margin-top:8px;display:flex;justify-content:space-between"><span>${T(p.name_en+' in Japan','日本の中の'+p.name_en)}</span><a href="/map/${p.slug}">${T('Open map →','地図を開く →')}</a></div></div>
   </section>
   <section class="pfgrid wrap">
     <div><div class="h3"><h3>${T('Known for','名産')}</h3><span class="meta mute">${T('Select to explore','選んで探す')}</span></div>
@@ -1048,9 +1060,9 @@ function renderPref(slug){
   </section>`:''}
   <section class="block wrap">
     <div class="h3"><h3>${T('Explore nearby','近くを巡る')}</h3><span class="meta mute">${T('Bordering prefectures','隣接する都道府県')}</span></div>
-    <div class="near">${(p.neighbors||[]).map(s=>{const o=P[s];return `<a href="#/pref/${s}"><span class="t">${o.name_en} <span style="text-transform:none;font-weight:300">${o.name_ja}</span></span><span class="s">${o.specialties.slice(0,4).join(' · ')}</span><span class="meta mute">${o.friends.length?fc(o.friends.length):'—'}</span></a>`;}).join('')}</div>
+    <div class="near">${(p.neighbors||[]).map(s=>{const o=P[s];return `<a href="/pref/${s}"><span class="t">${o.name_en} <span style="text-transform:none;font-weight:300">${o.name_ja}</span></span><span class="s">${o.specialties.slice(0,4).join(' · ')}</span><span class="meta mute">${o.friends.length?fc(o.friends.length):'—'}</span></a>`;}).join('')}</div>
   </section>
-  ${share.length?`<section class="block wrap"><div class="h3"><h3>${T('Also known for the same foods','同じ名産を持つ都道府県')}</h3></div><div class="near">${share.map(o=>`<a href="#/pref/${o.slug}"><span class="t">${o.name_en}</span><span class="s">${o.specialties.filter(s=>p.specialties.includes(s)).join(' · ')}</span></a>`).join('')}</div></section>`:''}`;
+  ${share.length?`<section class="block wrap"><div class="h3"><h3>${T('Also known for the same foods','同じ名産を持つ都道府県')}</h3></div><div class="near">${share.map(o=>`<a href="/pref/${o.slug}"><span class="t">${o.name_en}</span><span class="s">${o.specialties.filter(s=>p.specialties.includes(s)).join(' · ')}</span></a>`).join('')}</div></section>`:''}`;
 }
 
 /* ---------- submit ---------- */
@@ -1070,7 +1082,7 @@ function renderSubmit(params){
         <span class="meta">${T('Producers and makers','つくり手の方へ')}</span>
         <h2>${T('Want to be listed?','掲載を希望する方へ')}</h2>
         <p>${T('Producers, farmers, makers and anyone else involved in Japanese food culture. Tell us about yourself, or about someone you think we should visit.','生産者、農家、つくり手、日本の食文化に関わるすべての方へ。ご自身のこと、または私たちが訪ねるべき方のことを教えてください。')}</p>
-        <a class="btn ghost" href="#/submit" onclick="event.preventDefault();document.getElementById('apply').scrollIntoView({behavior:'smooth'})">${T('Apply below ↓','下のフォームから応募 ↓')}</a>
+        <a class="btn ghost" href="/submit" onclick="event.preventDefault();document.getElementById('apply').scrollIntoView({behavior:'smooth'})">${T('Apply below ↓','下のフォームから応募 ↓')}</a>
       </div>
     </div>
   </section>
@@ -1128,25 +1140,25 @@ function renderAbout(){
         <div><div class="meta">${T('Food','食')}</div><p>${T('What grows, gets made and comes into season where, and who is behind it.','どこで何が育ち、つくられ、旬を迎えるのか。そして、その向こうにいる人。')}</p></div>
       </div>
       <p style="margin-top:28px;text-transform:none;letter-spacing:-.01em">${T('The network grows as we travel. Cabi &amp; Friends is part of Cabi Foods, and many of the people here are behind what we make.','このつながりは、旅とともに広がっていきます。Cabi &amp; FriendsはCabi Foodsの一部で、ここにいる多くの人が、私たちのつくるものを支えています。')}</p>
-      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="#/submit">${T('Get in touch','お問い合わせ')}</a></div>
+      <div class="ctrls" style="margin-top:28px"><a class="btn" href="https://cabifoods.com" target="_blank" rel="noopener">${T('Visit Cabi Foods ↗','Cabi Foodsへ ↗')}</a><a class="btn ghost" href="/submit">${T('Get in touch','お問い合わせ')}</a></div>
     </div>
   </section>`;
 }
-function notFound(){app.innerHTML=`<div class="wrap empty"><p>${T('We couldn’t find that page.','ページが見つかりませんでした。')}</p><a class="btn ghost" href="#/directory">${T('Back to the directory','一覧に戻る')}</a></div>`;}
+function notFound(){app.innerHTML=`<div class="wrap empty"><p>${T('We couldn’t find that page.','ページが見つかりませんでした。')}</p><a class="btn ghost" href="/directory">${T('Back to the directory','一覧に戻る')}</a></div>`;}
 
 /* ---------- actions ---------- */
 const onExplore=()=>mounted;
 window.A={
-  friend:s=>{location.hash='#/friend/'+s;},
-  lang:l=>{if(l===LANG)return;LANG=l;localStorage.setItem('cf_lang',l);applyLangData();applyStatic();const y=scrollY;mounted=false;mapBuilt=false;route();window.scrollTo(0,y);},
-  tag:(k)=>{if(!onExplore()){state.tags=new Set([k]);state.q='';location.hash='#/directory';return;}state.tags.has(k)?state.tags.delete(k):state.tags.add(k);state.preview=null;renderTags();update();},
+  friend:s=>{nav('/friend/'+s);},
+  lang:l=>{if(l===LANG)return;LANG=l;localStorage.setItem('cf_lang',l);{const q=new URLSearchParams(location.search);q.delete('lang');const qs=q.toString();history.replaceState(null,'',withLang(location.pathname+(qs?'?'+qs:'')));}applyLangData();applyStatic();const y=scrollY;mounted=false;mapBuilt=false;route();window.scrollTo(0,y);},
+  tag:(k)=>{if(!onExplore()){state.tags=new Set([k]);state.q='';nav('/directory');return;}state.tags.has(k)?state.tags.delete(k):state.tags.add(k);state.preview=null;renderTags();update();},
   term:(t)=>{const k='food:'+t;state.tags.clear();state.sel=null;if(FOODS.includes(t)){state.tags.add(k);state.q='';}else state.q=t;
-    if(onExplore()){$('#q').value=state.q;renderTags();update();window.scrollTo({top:$('.search').offsetTop-10,behavior:'smooth'});}else location.hash=state.view==='map'?'#/map':'#/directory';},
+    if(onExplore()){$('#q').value=state.q;renderTags();update();window.scrollTo({top:$('.search').offsetTop-10,behavior:'smooth'});}else nav(state.view==='map'?'/map':'/directory');},
   clearQ:()=>{state.q='';$('#q').value='';update();},
   clearAll:()=>{state.q='';state.tags.clear();if($('#q'))$('#q').value='';update();},
-  random:()=>{const cur=(location.hash.match(/friend\/([^/?]+)/)||[])[1];const pool=FRIENDS.filter(f=>f.slug!==cur);location.hash='#/friend/'+pool[Math.floor(Math.random()*pool.length)].slug;},
+  random:()=>{const cur=(location.pathname.match(/friend\/([^/?]+)/)||[])[1];const pool=FRIENDS.filter(f=>f.slug!==cur);nav('/friend/'+pool[Math.floor(Math.random()*pool.length)].slug);},
   randomPref:()=>{A.mapPref(PREFS[Math.floor(Math.random()*47)].slug);},
-  mapPref:s=>{history.replaceState(null,'','#/map'+(s?'/'+s:''));state.sel=s;state.view='map';if(onExplore())update();else route();},
+  mapPref:s=>{history.replaceState(null,'',withLang('/map'+(s?'/'+s:'')));state.sel=s;state.view='map';if(onExplore())update();else route();},
   pv:k=>{state.preview=k;applyPreview();},
   toggleFilters:()=>{state.showFilters=!state.showFilters;update();},
   fpanel:o=>document.body.classList.toggle('fopen',!!o),
@@ -1187,7 +1199,7 @@ window.A={
         :x.message==='too_many'?T('We’ve received several submissions from you already. Please try again in an hour.','すでに複数の応募を受け付けています。1時間ほどしてから再度お試しください。')
         :T('Something went wrong and nothing was sent. Please try again.','送信できませんでした。もう一度お試しください。');
       return false;}
-    app.innerHTML=`<section class="wrap empty" style="padding:96px var(--pad)"><div class="meta mute">${T('Received · ありがとうございます','受け付けました')}</div><p style="font-size:32px;max-width:24ch;line-height:1.2">${T('Thank you. We’ll read about '+esc(d.get('business')||'them')+' soon.','ありがとうございます。'+esc(d.get('business')||'')+'について、近いうちに拝読します。')}</p><p class="mute" style="font-size:15px">${T('Cabi &amp; Friends is curated, so we can’t include everyone. If there’s a fit, we’ll write to '+esc(d.get('email'))+'.','Cabi &amp; Friendsは編集されたディレクトリのため、すべての方を掲載することはできません。ご縁がありそうな場合は、'+esc(d.get('email'))+'へご連絡します。')}</p><div class="ctrls"><a class="btn" href="#/directory">${T('Back to the directory','一覧に戻る')}</a><button class="btn ghost" onclick="A.random()">${T('Random Friend ↝','ランダムな友人 ↝')}</button></div></section>`;window.scrollTo(0,0);return false;}
+    app.innerHTML=`<section class="wrap empty" style="padding:96px var(--pad)"><div class="meta mute">${T('Received · ありがとうございます','受け付けました')}</div><p style="font-size:32px;max-width:24ch;line-height:1.2">${T('Thank you. We’ll read about '+esc(d.get('business')||'them')+' soon.','ありがとうございます。'+esc(d.get('business')||'')+'について、近いうちに拝読します。')}</p><p class="mute" style="font-size:15px">${T('Cabi &amp; Friends is curated, so we can’t include everyone. If there’s a fit, we’ll write to '+esc(d.get('email'))+'.','Cabi &amp; Friendsは編集されたディレクトリのため、すべての方を掲載することはできません。ご縁がありそうな場合は、'+esc(d.get('email'))+'へご連絡します。')}</p><div class="ctrls"><a class="btn" href="/directory">${T('Back to the directory','一覧に戻る')}</a><button class="btn ghost" onclick="A.random()">${T('Random Friend ↝','ランダムな友人 ↝')}</button></div></section>`;window.scrollTo(0,0);return false;}
 };
 
 /* ---------- router ---------- */
@@ -1195,10 +1207,29 @@ window.A={
 let lastPage='';
 function pageIn(key){if(key===lastPage)return;lastPage=key;app.classList.remove('pg-in');void app.offsetWidth;app.classList.add('pg-in');
   clearTimeout(pageIn.t);pageIn.t=setTimeout(()=>app.classList.remove('pg-in'),1100);}
+/* Real URLs (/friend/morita-shoyu) with history.pushState; ?lang=ja marks the Japanese version of a page */
+function withLang(p){if(LANG!=='ja')return p;const [a,h='']=p.split('#');return a+(a.includes('?')?'&':'?')+'lang=ja'+(h?'#'+h:'');}
+function nav(p,replace){if(!p)return;const t=titleFor(p.split(/[?#]/)[0]);if(t)document.title=t; // title first, so analytics records the new page's title
+  history[replace?'replaceState':'pushState'](null,'',withLang(p));dispatchEvent(new Event('routechange'));}
+// Page titles (the server sends the same ones in the first response)
+function titleFor(pathname){const [r='directory',a]=pathname.replace(/^\/+/,'').split('/').filter(Boolean).map(decodeURIComponent),S=' · Cabi & Friends',ja=LANG==='ja';
+  if(r==='friend'){const f=F[a];if(!f)return '';const p=P[f.prefecture],m=f._makes||'';
+    return ja?`${f._ja||f._en} · ${p._ja}の${m.split(' · ').map(t=>(window.JA_TERMS||{})[t]||t).join(' · ')}${S}`:`${f._en}${f._ja?` (${f._ja})`:''} · ${m} in ${p._en}, Japan${S}`;}
+  if(r==='pref'||(r==='map'&&a)){const p=P[a];if(!p)return '';return ja?`${p._ja}の食ガイド・名産と旬${S}`:`${p._en} food guide: what to eat in ${p._en}${S}`;}
+  return {directory:ja?'Cabi & Friends · 日本各地のつくり手と、土地と、食べ物':'Cabi & Friends · People, places & food we love across Japan',
+    map:(ja?'地図 · 日本各地のつくり手':'Map of Japan’s producers')+S,about:(ja?'Cabi & Friendsについて':'About')+S,submit:(ja?'お問い合わせ':'Get in touch')+S}[r]||'';}
+window.nav=nav;
+addEventListener('popstate',()=>dispatchEvent(new Event('routechange')));
+// In-site links navigate without a reload
+document.addEventListener('click',e=>{if(e.defaultPrevented||e.button||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+  const a=e.target.closest('a[href]');if(!a||a.target||a.hasAttribute('download'))return;const h=a.getAttribute('href');
+  if(!h||!h.startsWith('/')||h.startsWith('//')||/^\/(api|admin|assets|fonts|_ds|_vercel)\b/.test(h))return;
+  e.preventDefault();nav(h);});
 function route(){
-  const [path,qs]=location.hash.replace(/^#\/?/,'').split('?');
+  const path=location.pathname.replace(/^\/+/,''),qs=location.search.slice(1);
   const parts=path.split('/').filter(Boolean).map(decodeURIComponent);const params=new URLSearchParams(qs||'');
   const r=parts[0]||'directory';
+  {const t=titleFor(location.pathname);if(t)document.title=t;}
   pageIn(r==='map'?'map':r+'/'+(parts[1]||''));
   navMark(r);
   document.body.classList.toggle('r-about',r==='about');
@@ -1211,7 +1242,7 @@ function route(){
   mounted=false;mapBuilt=false;window.scrollTo(0,0);
   if(r==='friend')renderFriend(parts[1]);else if(r==='pref')renderPref(parts[1]);else if(r==='submit')renderSubmit(params);else if(r==='about')renderAbout();else notFound();
 }
-addEventListener('hashchange',route);
+addEventListener('routechange',route);
 addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'&&$('#q')){e.preventDefault();$('#q').focus();}});
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(mounted&&state.view==='map'){mapBuilt=false;update();}},200);});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&state.open)A.closeFig();});
@@ -1251,7 +1282,7 @@ if(hoverable){
     if(foodImg.getAttribute('src')!==src)foodImg.src=src;foodMove(e);foodEl.classList.add('on');});
   document.addEventListener('mouseout',e=>{const el=e.target.closest&&e.target.closest('.tag,[data-food]');if(el&&!el.contains(e.relatedTarget))foodEl.classList.remove('on');});
   document.addEventListener('mousemove',e=>{if(foodEl.classList.contains('on'))foodMove(e);});
-  addEventListener('hashchange',()=>foodEl.classList.remove('on'));
+  addEventListener('routechange',()=>foodEl.classList.remove('on'));
 }
 const B=document.body;
 const lift=()=>{if(!B.classList.contains('intro'))return;const now=performance.now();
@@ -1274,18 +1305,18 @@ const icon=(src,kind,crop)=>{if(!src)return `<span class="ic"></span>`;
   const c=crop||(kind==='logo'?[188,50,50]:['cover',50,50]);
   return `<span class="ic ${kind}" style="background:#fff url('${src}') ${c[1]}% ${c[2]}%/${c[0]==='cover'?'cover':c[0]+'% auto'} no-repeat"></span>`;};
 const card=(n,tag='button')=>`<${tag} class="nt" ${n.href?`data-href="${n.href}"`:''}>${icon(n.icon,n.kind,n.crop)}<b>${n.title}</b><time>${n.time||T('now','今')}</time><p>${n.body}</p></${tag}>`;
-const go=h=>{if(h)location.hash=h;};
+const go=h=>{if(h)nav(h);};
 
 /* First visit: three notifications introducing Cabi & Friends */
 function welcome(){
-  if(seen()||!/^#\/?(directory)?$/.test(location.hash||'#/'))return;
+  if(seen()||!onHome())return;
   const morita=F['morita-shoyu'],guides=new Set(PREFS.flatMap(p=>[...p._spec,...p._seas])).size;
   const items=[
-    {icon:'/assets/cabi-friends-black.png',kind:'logo',title:'Cabi &amp; Friends',href:'#/about',
+    {icon:'/assets/cabi-friends-black.png',kind:'logo',title:'Cabi &amp; Friends',href:'/about',
      body:T('Meet the makers keeping Japan’s everyday flavours alive. Our Friends are brewers, farmers and salt makers we know by name, across all 47 prefectures.','日本の毎日の味を守り続ける、つくり手たちに会いに行こう。私たちの友人は、名前で呼び合える蔵元、農家、塩づくりの人たち。47都道府県に広がっています。')},
-    {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Food guides','食ガイド'),href:'#/map',time:T('2m ago','2分前'),
+    {icon:foodUrl('Noto fish sauce / Ishiru'),kind:'food',title:T('Food guides','食ガイド'),href:'/map',time:T('2m ago','2分前'),
      body:T(`Every region of Japan has its own food culture. Our guides show what each of the 47 prefectures is known for and what comes into season, ${guides} regional foods in all.`,`日本の食は、土地ごとに違います。47都道府県それぞれの名産と旬を、${guides}の土地の食べ物とともに紹介しています。`)},
-    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[376,57.6,22.5],title:T('Producers','つくり手'),href:'#/directory',time:T('5m ago','5分前'),
+    morita&&{icon:morita.images[0]&&thumb(morita.images[0].src).replace('w=200','w=384'),kind:'photo',crop:[376,57.6,22.5],title:T('Producers','つくり手'),href:'/directory',time:T('5m ago','5分前'),
      body:T('Behind every product is a person. Each Friend has a profile with their story and craft, so you can find the makers and connect with them directly.','おいしいものの向こうには、いつも人がいます。友人一人ひとりのプロフィールで、物語やものづくりを知り、つくり手と直接つながることができます。')},
   ].filter(Boolean);
   const scrim=document.createElement('div');scrim.className='nc-scrim';
@@ -1303,9 +1334,9 @@ function welcome(){
 /* Every minute or two: a new Friend or a regional food guide, in empty header space */
 let pool=[],pi=0,timer=0,hideT=0,el=null;
 function buildPool(){
-  const fr=[...FRIENDS].sort((a,b)=>b.id-a.id).slice(0,8).map(f=>({icon:photoOf(f)||'/assets/cabi-friends-black.png',kind:photoOf(f)?'photo':'logo',href:'#/friend/'+f.slug,
+  const fr=[...FRIENDS].sort((a,b)=>b.id-a.id).slice(0,8).map(f=>({icon:photoOf(f)||'/assets/cabi-friends-black.png',kind:photoOf(f)?'photo':'logo',href:'/friend/'+f.slug,
     title:T('New Friend','新しい友人'),body:`${esc(f.name_en)} · ${P[f.prefecture].name_en}. ${esc((f.description||f.makes||'').split(/(?<=[.。])\s*/)[0])}`}));
-  const gd=PREFS.filter(p=>p._spec.some(s=>foodUrl(s))).sort(()=>Math.random()-.5).slice(0,8).map(p=>{const sp=p._spec.find(s=>foodUrl(s));return {icon:foodUrl(sp),kind:'food',href:'#/pref/'+p.slug,
+  const gd=PREFS.filter(p=>p._spec.some(s=>foodUrl(s))).sort(()=>Math.random()-.5).slice(0,8).map(p=>{const sp=p._spec.find(s=>foodUrl(s));return {icon:foodUrl(sp),kind:'food',href:'/pref/'+p.slug,
     title:T('Food guide','食ガイド')+' · '+p.name_en,body:esc(p.description)};});
   pool=[];for(let i=0;i<Math.max(fr.length,gd.length);i++){if(gd[i])pool.push(gd[i]);if(fr[i])pool.push(fr[i]);}
 }
@@ -1333,7 +1364,7 @@ function show(force){
 function hide(me,now){clearTimeout(hideT);if(now)me.style.transition='opacity .25s ease';me.classList.remove('on');setTimeout(()=>me.remove(),now?300:1900);}
 function ambientSoon(ms){clearTimeout(timer);timer=setTimeout(show,ms||60000+Math.random()*60000);}
 addEventListener('resize',()=>{if(el&&el.classList.contains('on'))hide(el,true);});
-addEventListener('hashchange',()=>{if(el)hide(el,true);});
+addEventListener('routechange',()=>{if(el)hide(el,true);});
 
 // Start once the landing animation has finished
 (function start(){if(document.body.classList.contains('intro'))return setTimeout(start,200);

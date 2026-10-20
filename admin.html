@@ -202,7 +202,7 @@ function subPane(s){
     ${s.story?`<h2>${T('Their story','ストーリー')}</h2><div class="story">${esc(s.story)}</div>`:''}
     <h2>${T('Photos','写真')} (${s.photos.length})${!done&&s.photos.length?` — ${T('ticked photos are published','チェックした写真を公開')}`:''}</h2>
     <div class="photos">${s.photos.map(p=>`<label><img src="${esc(p.url)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'pill',textContent:'${esc(p.path.split('.').pop())}'}))">${done?'':`<input type="checkbox" name="ph" value="${esc(p.path)}" ${/\.(jpe?g|png|webp|gif|avif)$/i.test(p.path)?'checked':'disabled'}>`}</label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
-    ${s.status==='approved'?`<div class="acts">${s.friend?`<a class="btn" href="/#/friend/${esc(s.friend.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a><span class="pill ${s.friend.published?'on':''}">${s.friend.published?T('Live','公開'):T('Draft','非公開')}</span>`:''}</div>`
+    ${s.status==='approved'?`<div class="acts">${s.friend?`<a class="btn" href="/friend/${esc(s.friend.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a><span class="pill ${s.friend.published?'on':''}">${s.friend.published?T('Live','公開'):T('Draft','非公開')}</span>`:''}</div>`
     :s.status==='rejected'?`<div class="acts"><button class="btn ghost" onclick="A.act('reopen')">${T('Move back to New','新規に戻す')}</button></div>`
     :`<h2>${T('Listing — check and edit before approving','掲載内容 — 承認前に確認・編集')}</h2>${form(draft)}
       <div class="fld full"><label>${T('Internal note (optional)','内部メモ（任意）')}</label><input id="note"></div>
@@ -213,7 +213,7 @@ function friendPane(f){
     <h1 style="margin-top:8px">${esc(f.name_en)}</h1>
     <div class="acts" style="padding-top:12px"><span class="pill ${f.published?'on':''}">${f.published?T('Live','公開'):T('Draft','非公開')}</span>
       <button class="btn ghost" onclick="A.publish(${f.id},${!f.published})">${f.published?T('Unpublish','非公開にする'):T('Publish','公開する')}</button>
-      ${f.published?`<a class="btn ghost" href="/#/friend/${esc(f.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a>`:''}</div>
+      ${f.published?`<a class="btn ghost" href="/friend/${esc(f.slug)}" target="_blank">${T('View on site ↗','サイトで見る ↗')}</a>`:''}</div>
     ${f.source==='airtable'?`<p class="meta mute">${T('Synced from Airtable — edits here are overwritten by the next sync.','Airtableから同期 — ここでの編集は次回の同期で上書きされます。')}</p>`:''}
     <h2>${T('Photos','写真')} (${f.images.length})</h2><div class="photos">${f.images.map(u=>`<label>${/\.(mp4|m4v|webm|mov)(\?|$)/i.test(u)?`<video src="${esc(u)}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${esc(u)}" alt="">`}</label>`).join('')||`<span class="mute">${T('None','なし')}</span>`}</div>
     <h2>${T('Listing','掲載内容')}</h2>${form(f)}
