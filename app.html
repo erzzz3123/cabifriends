@@ -644,10 +644,8 @@ const isVid=s=>/\.(mp4|m4v|webm|mov)(\?|#|$)/i.test(s||'');
 const LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const opt=(src,w)=>{if(!src)return src;const u=src.startsWith('assets/')?'/'+src:src;if(LOCAL||isVid(src))return u;
   return /^(\/assets\/|https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\/)/.test(u)?'/_vercel/image?url='+encodeURIComponent(u)+'&w='+w+'&q=78':src;};
-document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=viaMedia(decodeURIComponent(m[1]));},true);
-// Videos (and photo fallbacks) come through /media/… so Vercel's CDN caches them instead of Supabase serving every view
-const viaMedia=u=>String(u||'').replace(/^https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\//,'/media/');
-const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${viaMedia(src)}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
+document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=decodeURIComponent(m[1]);},true);
+const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={}; PREFS.forEach((p,i)=>{p.id=i+1;P[p.slug]=p;p.friends=[];p._en=p.name_en;p._ja=p.name_ja;p._desc=p.description;p._spec=p.specialties;p._seas=p.seasonal_foods;});
 window.FRIENDS=FRIENDS.filter(f=>f&&f.slug&&P[f.prefecture]);FRIENDS.forEach(f=>{['images','tags','specialties','ingredients','methods'].forEach(k=>{if(!Array.isArray(f[k]))f[k]=[];});if(!Array.isArray(f.story))f.story=f.story?[f.story]:[];if(!Array.isArray(f.story_ja))f.story_ja=f.story_ja?[f.story_ja]:[];});
@@ -846,7 +844,9 @@ const SORTS={no:'No. 1 →',shuffle:'Random',new:'Recently added',az:'A–Z',ns:
 const SORTS_JA={no:'番号順',shuffle:'ランダム',new:'新着順',az:'名前順',ns:'北から南へ'};
 const RAT=['4/5','3/2','1/1'],TONE=['rgba(67,47,41,.30)','rgba(67,47,41,.16)','rgba(67,47,41,.42)'];
 const desk=()=>matchMedia('(min-width:761px)').matches;
-function strip(f){const ims=f.images.slice(0,3);return ims.map((im,i)=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src,'',false,384):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
+// Thumbnails show photos only: videos would download from storage on every visit just to draw a frame
+const stills=(f,n)=>{const a=f.images.map((im,i)=>({im,i})).filter(x=>!x.im.src||!isVid(x.im.src));return a.slice(0,n);};
+function strip(f){return stills(f,3).map(({im,i})=>`<button class="th" aria-label="${esc(im.caption)}" onclick="event.stopPropagation();A.openFig(this,'${f.slug}',${i})">${im.src?media(im.src,'',false,384):`<span class="ph2" style="aspect-ratio:${RAT[i%3]};background:${TONE[i%3]}"></span>`}</button>`).join('');}
 function panelHTML(f,i){const p=P[f.prefecture];const ims=[f.images[i],...f.images.filter((_,j)=>j!==i)];
   return `<div class="dp-h"><div><span>${esc(f.name_en)}</span> <span class="mute">${f.name_ja}</span><br><span class="mute">${p.name_en} · ${esc(f.makes)}</span></div><div class="a ui"><a href="/friend/${f.slug}">${T('Open profile →','プロフィールを見る →')}</a><button class="lnk ui" onclick="A.closeFig()">${T('Close ×','閉じる ×')}</button></div></div>
   ${f.description?`<p class="dp-d" style="text-transform:none">${esc(f.description)}</p>`:''}
@@ -869,7 +869,7 @@ function renderDirectory(list){
      <div class="tx" onclick="A.openEnt('${f.slug}')"><span>${esc(f.name_en)}</span><span>${f.name_ja}</span><span>${p.name_en}${f.makes?' · '+esc(f.makes):''}</span>
        <div class="strip">${strip(f)}</div></div>
    </div>`;}).join('');
-  const cards=list.map(f=>{const p=P[f.prefecture],im=f.images[0];return `
+  const cards=list.map(f=>{const p=P[f.prefecture],im=(stills(f,1)[0]||{im:f.images[0]}).im;return `
    <article class="card" data-slug="${f.slug}" onclick="A.friend('${f.slug}')">
      <div class="thumb">${im.src?media(im.src,esc(im.caption),false,828):`<span class="kj">${f.name_ja}</span><span class="lbl"><span></span><span>${T('[ Photo ]','[ 写真 ]')} ${esc(im.caption)}</span></span>`}
        <div class="hv"><span class="meta" style="opacity:.8">${p.name_ja} · ${coord(f.latitude,f.longitude)}</span><span>${esc(f.makes)}</span></div></div>
@@ -944,7 +944,7 @@ function buildMap(){
     .style('opacity',0)
     .each(function(f){const el=this;setTimeout(()=>{el.style.opacity=1;},250+dOrder.indexOf(f.slug)*90);})
     .attr('transform',f=>{const [x,y]=projFor(pr,f.prefecture)([f.longitude,f.latitude]);return `translate(${x},${y})`;})
-    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${f.images.slice(0,3).map(im=>im.src?media(im.src,'',false,384):`<span></span>`).join('')}</div>`))
+    .on('mouseenter',(e,f)=>tipShow(e,`<div class="t">${esc(f.name_en)}</div><div>${f.name_ja}</div><div class="s">${esc(f.makes)}</div><div class="s" style="opacity:.75">${esc(f.city)}</div><div class="tth">${stills(f,3).map(({im})=>im.src?media(im.src,'',false,384):`<span></span>`).join('')}</div>`))
     .on('mousemove',tipMove).on('mouseleave',tipHide)
     .on('click',(e,f)=>{tipHide();A.friend(f.slug);});
   dots.append('circle').attr('class','hit'); // larger invisible hover/tap area

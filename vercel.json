@@ -43,10 +43,6 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
-    },
-    {
-      "source": "/media/:path*",
-      "destination": "https://csgfcyrooakfntvvzatn.supabase.co/storage/v1/object/public/producer_images/:path*"
     }
   ],
   "redirects": [
@@ -107,19 +103,6 @@
         {
           "key": "Cache-Control",
           "value": "no-store"
-        }
-      ]
-    },
-    {
-      "source": "/media/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        },
-        {
-          "key": "CDN-Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
