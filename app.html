@@ -644,8 +644,10 @@ const isVid=s=>/\.(mp4|m4v|webm|mov)(\?|#|$)/i.test(s||'');
 const LOCAL=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const opt=(src,w)=>{if(!src)return src;const u=src.startsWith('assets/')?'/'+src:src;if(LOCAL||isVid(src))return u;
   return /^(\/assets\/|https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\/)/.test(u)?'/_vercel/image?url='+encodeURIComponent(u)+'&w='+w+'&q=78':src;};
-document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=decodeURIComponent(m[1]);},true);
-const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${src}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
+document.addEventListener('error',e=>{const t=e.target;if(t.tagName!=='IMG')return;const m=(t.getAttribute('src')||'').match(/^\/_vercel\/image\?url=([^&]+)/);if(m)t.src=viaMedia(decodeURIComponent(m[1]));},true);
+// Videos (and photo fallbacks) come through /media/… so Vercel's CDN caches them instead of Supabase serving every view
+const viaMedia=u=>String(u||'').replace(/^https:\/\/csgfcyrooakfntvvzatn\.supabase\.co\/storage\/v1\/object\/public\/producer_images\//,'/media/');
+const media=(src,alt='',play=false,w=1600)=>isVid(src)?`<video src="${viaMedia(src)}${play?'':'#t=0.1'}" muted playsinline loop ${play?'autoplay preload="auto"':'preload="metadata"'} aria-label="${alt}"></video>`:`<img src="${opt(src,w)}" alt="${alt}">`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={}; PREFS.forEach((p,i)=>{p.id=i+1;P[p.slug]=p;p.friends=[];p._en=p.name_en;p._ja=p.name_ja;p._desc=p.description;p._spec=p.specialties;p._seas=p.seasonal_foods;});
 window.FRIENDS=FRIENDS.filter(f=>f&&f.slug&&P[f.prefecture]);FRIENDS.forEach(f=>{['images','tags','specialties','ingredients','methods'].forEach(k=>{if(!Array.isArray(f[k]))f[k]=[];});if(!Array.isArray(f.story))f.story=f.story?[f.story]:[];if(!Array.isArray(f.story_ja))f.story_ja=f.story_ja?[f.story_ja]:[];});
