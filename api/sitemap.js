@@ -1,5 +1,5 @@
 // GET /sitemap.xml → every page in English and Japanese (?lang=ja), with hreflang pairs.
-import { loadSiteData } from '../lib/data.js';
+import { loadSiteDataOrSnapshot as loadSiteData } from '../lib/data.js';
 
 const SITE = (process.env.SITE_URL || 'https://cabifriends.vercel.app').replace(/\/$/, '');
 const x = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');

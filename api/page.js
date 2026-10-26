@@ -4,7 +4,7 @@
 // If anything fails, the plain app shell is sent and the page still works in the browser.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadSiteData } from '../lib/data.js';
+import { loadSiteDataOrSnapshot as loadSiteData } from '../lib/data.js';
 import { renderPage } from '../lib/seo.js';
 
 const SITE = (process.env.SITE_URL || 'https://cabifriends.vercel.app').replace(/\/$/, '');
