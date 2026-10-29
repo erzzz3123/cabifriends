@@ -22,9 +22,13 @@ export default async function handler(req, res) {
     const pathname = String(req.query.__p || '/');
     const search = new URLSearchParams(req.query.lang ? { lang: String(req.query.lang) } : {}).toString();
     const data = await loadSiteData();
-    const { status, html } = renderPage({ pathname, search, data, ja, shell, site: SITE, gaId: GA_ID, production: process.env.VERCEL_ENV === 'production' });
+    const { status, html: page } = renderPage({ pathname, search, data, ja, shell, site: SITE, gaId: GA_ID, production: process.env.VERCEL_ENV === 'production' });
     // A few minutes at the edge; Airtable/approval changes appear within ~5 minutes, stale copies serve while refreshing.
     res.setHeader('Cache-Control', status === 200 ? 'public, s-maxage=300, stale-while-revalidate=86400' : 'public, s-maxage=60');
+    // The page's data goes inline, so the browser doesn't wait on a separate /api/data request before drawing
+    const j = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+    const inline = `<script>window.FRIENDS=${j(data.FRIENDS)};window.PREFS=${j(data.PREFS)};window.FOOD_DROPBOX=${j(data.FOOD_DROPBOX || {})};</script>`;
+    const html = page.replace('<script src="/api/data"></script>', inline);
     res.status(status).send(html);
   } catch (err) {
     console.error(err);
